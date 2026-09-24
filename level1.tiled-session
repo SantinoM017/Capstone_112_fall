@@ -1,15 +1,29 @@
 {
-    "activeFile": "",
+    "activeFile": "assets/levels/level1.tmx",
     "expandedProjectPaths": [
+        ".idea",
+        ".",
+        "assets/levels",
+        "assets"
     ],
     "fileStates": {
+        "assets/levels/level1.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 821.3333333333333,
+                "y": 128.66666666666674
+            }
+        }
     },
     "map.height": 15,
     "map.lastUsedFormat": "tmx",
     "map.width": 25,
     "openFiles": [
+        "assets/levels/level1.tmx"
     ],
     "project": "level1.tiled-project",
     "recentFiles": [
+        "assets/levels/level1.tmx"
     ]
 }
