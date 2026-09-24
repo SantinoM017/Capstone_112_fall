@@ -118,9 +118,9 @@ public class Main extends ApplicationAdapter {
 
     }
 
+    // cleans up after the program is closed
     @Override
     public void dispose() {
-        // cleans up after the program is closed
         batch.dispose();
         world.dispose();
         debugRenderer.dispose();
