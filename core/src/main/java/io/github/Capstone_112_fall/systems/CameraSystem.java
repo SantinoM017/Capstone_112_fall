@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
 import io.github.Capstone_112_fall.components.PlayerComponent;
 import io.github.Capstone_112_fall.components.TransformComponent;
 
+// operates the camera that follows the player
 public class CameraSystem extends IteratingSystem {
     private final OrthographicCamera camera;
     private final ComponentMapper<TransformComponent> transformMapper = ComponentMapper.getFor(TransformComponent.class);

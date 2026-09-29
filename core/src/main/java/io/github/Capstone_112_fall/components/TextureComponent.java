@@ -1,0 +1,11 @@
+package io.github.Capstone_112_fall.components;
+
+import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
+// tags an entity with a texture region to be drawn
+public class TextureComponent implements Component {
+    public TextureRegion textureRegion;
+    public int zIndex = 0;
+    public boolean flipX = false;
+}

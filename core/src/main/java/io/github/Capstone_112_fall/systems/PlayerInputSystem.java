@@ -8,20 +8,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import io.github.Capstone_112_fall.components.Box2DComponent;
+import io.github.Capstone_112_fall.components.GroundedComponent;
 import io.github.Capstone_112_fall.components.PlayerComponent;
 
+// This system handles player input and applies movement to the player's Box2D body.
 public class PlayerInputSystem extends IteratingSystem {
     private final ComponentMapper<Box2DComponent> box2DComponent = ComponentMapper.getFor(Box2DComponent.class);
     private final ComponentMapper<PlayerComponent> playerComponent = ComponentMapper.getFor(PlayerComponent.class);
+    private final ComponentMapper<GroundedComponent> groundedComponent = ComponentMapper.getFor(GroundedComponent.class);
 
     public PlayerInputSystem() {
-        super(Family.all(Box2DComponent.class, PlayerComponent.class).get());
+        super(Family.all(Box2DComponent.class, PlayerComponent.class, GroundedComponent.class).get());
     }
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         Box2DComponent box2D = box2DComponent.get(entity);
         PlayerComponent player = playerComponent.get(entity);
+        GroundedComponent grounded = groundedComponent.get(entity);
 
         if(box2D.body == null) return;
         Vector2 vel = box2D.body.getLinearVelocity();
@@ -37,7 +41,7 @@ public class PlayerInputSystem extends IteratingSystem {
         }
 
         // vertical movement. Guardrails to prevent jumping while in the air
-        if(Gdx.input.isKeyJustPressed(Input.Keys.W) && player.isGrounded){
+        if(Gdx.input.isKeyJustPressed(Input.Keys.W) && grounded.isGrounded){
             box2D.body.applyLinearImpulse(
                 new Vector2(0, 6f),
                 box2D.body.getWorldCenter(),

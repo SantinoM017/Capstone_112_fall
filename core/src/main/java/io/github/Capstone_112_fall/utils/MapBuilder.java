@@ -6,36 +6,24 @@ import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.physics.box2d.*;
 
+// utility class that reads from tiled maps and turns into objects
 public class MapBuilder {
-    public static void buildShapes(MapLayer layer, float ppm, World world){
+    public static void buildShapes(MapLayer layer, float ppm, EntityManager entityManager, String defaultRegionName){
         if(layer == null) return;
         // iterate through every object
         for(MapObject object : layer.getObjects()){
             // check for rectangle objects
-            if(object instanceof RectangleMapObject){
-                Rectangle r = ((RectangleMapObject) object).getRectangle();
+            Rectangle rect = ((RectangleMapObject)object).getRectangle();
 
-                BodyDef bdef = new BodyDef();
-                bdef.type = BodyDef.BodyType.StaticBody;
+            float centerX = (rect.x + rect.width / 2f) / ppm;
+            float centerY = (rect.y + rect.height / 2f) / ppm;
+            float widthMeters = rect.width / ppm;
+            float heightMeters = rect.height / ppm;
 
-                // convert from pixels to meters
-                float centerX = (r.x + r.width / 2f) / ppm;
-                float centerY = (r.y + r.height / 2f) / ppm;
-                bdef.position.set(centerX, centerY);
+            String regionName = object.getProperties().get("texture", defaultRegionName, String.class);
 
-                Body body = world.createBody(bdef);
-
-                PolygonShape shape = new PolygonShape();
-                // convert from pixels to meters
-                shape.setAsBox((r.width / 2f) / ppm, (r.height / 2f) / ppm);
-
-                FixtureDef fdef = new FixtureDef();
-                fdef.shape = shape;
-                fdef.friction = 0.5f;
-                body.createFixture(fdef);
-
-                shape.dispose();
-            }
+            entityManager.createStaticBlock(centerX, centerY, widthMeters, heightMeters, regionName);
         }
     }
 }
+

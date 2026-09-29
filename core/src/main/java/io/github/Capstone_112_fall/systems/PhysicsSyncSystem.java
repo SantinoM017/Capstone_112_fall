@@ -7,6 +7,7 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import io.github.Capstone_112_fall.components.Box2DComponent;
 import io.github.Capstone_112_fall.components.TransformComponent;
 
+// Syncs the TransformComponent with the Box2DComponent's body position and rotation
 public class PhysicsSyncSystem extends IteratingSystem {
     // allows for O(1) access to components
     private final ComponentMapper<Box2DComponent> box2DMapper = ComponentMapper.getFor(Box2DComponent.class);
