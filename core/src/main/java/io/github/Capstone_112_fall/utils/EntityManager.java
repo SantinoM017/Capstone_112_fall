@@ -3,8 +3,10 @@ package io.github.Capstone_112_fall.utils;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import io.github.Capstone_112_fall.components.*;
 
 
@@ -57,7 +59,28 @@ public class EntityManager {
         return player;
     }
 
-    public Entity createStaticBlock(float x, float y, float width, float height, String regionName) {
+    // Written by Claude (Anthropic AI assistant)
+    // creates entities from the values read by MapBuilder
+    public void createMapEntities(Array<MapEntityData> data) {
+        for(MapEntityData d : data) {
+            createMapEntity(d);
+        }
+    }
+
+    // Written by Claude (Anthropic AI assistant)
+    public Entity createMapEntity(MapEntityData d) {
+        // atlas region overrides the tileset texture if set
+        TextureRegion region = d.regionName != null ? atlas.findRegion(d.regionName) : d.region;
+
+        switch(d.type) {
+            // add cases here for special blocks (key, lucky, save, spike...)
+            default:
+                return createStaticBlock(d.x, d.y, d.width, d.height, region);
+        }
+    }
+
+    // Modified by Claude (Anthropic AI assistant)
+    public Entity createStaticBlock(float x, float y, float width, float height, TextureRegion region) {
         // create box2d body
         BodyDef bDef = new BodyDef();
         bDef.type = BodyDef.BodyType.StaticBody;
@@ -85,8 +108,10 @@ public class EntityManager {
         block.add(transformComponent);
 
         TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
-        textureComponent.textureRegion = atlas.findRegion(regionName);
+        textureComponent.textureRegion = region;
         textureComponent.zIndex = 0;
+        // scale the texture so it fills the body
+        if(region != null) textureComponent.scale = width / (region.getRegionWidth() / 32f);
         block.add(textureComponent);
 
         engine.addEntity(block);

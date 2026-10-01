@@ -65,7 +65,6 @@ public class Main extends ApplicationAdapter {
         // atlas setup
         try {
             atlas = new TextureAtlas("game_assets.atlas");
-            AnimationFactory animationFactory = new AnimationFactory(atlas);
         } catch (GdxRuntimeException e){
             System.out.println("Texture atlas not found");
         }
@@ -81,8 +80,8 @@ public class Main extends ApplicationAdapter {
             System.out.println("Level not found");
         }
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1/PPM); // draws the map converting from pixels to meters
-        MapBuilder.buildShapes(map.getLayers().get("Ground"),
-            PPM, entityManager, "brick1"); // creates the actual Box2D hitboxes
+        // Modified by Claude (Anthropic AI assistant)
+        entityManager.createMapEntities(MapBuilder.parse(map, PPM)); // turns tiles and objects into entities
 
         // treat tiles as 1x1 meters, so no conversion rate needed
         int mapWidthTiles = map.getProperties().get("width", Integer.class);

@@ -69,12 +69,13 @@ public class RenderSystem extends EntitySystem {
                 texture.textureRegion.flip(true, false);
             }
 
+            // Modified by Claude (Anthropic AI assistant)
             batch.draw(
                 texture.textureRegion,
                 drawX, drawY,
                 originX, originY,
                 width, height,
-                0.5f, 0.5f,
+                texture.scale, texture.scale,
                 transform.rotation
             );
         }
