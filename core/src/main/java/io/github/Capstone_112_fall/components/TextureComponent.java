@@ -9,5 +9,5 @@ public class TextureComponent implements Component {
     public int zIndex = 0;
     public boolean flipX = false;
     // Written by Claude (Anthropic AI assistant)
-    public float scale = 0.5f; // atlas art is 64px per meter, so default to half size
+    public float scale = 2f; // atlas art is 64px per meter, so default to half size
 }

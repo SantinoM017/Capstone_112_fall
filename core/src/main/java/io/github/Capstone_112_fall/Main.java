@@ -50,7 +50,7 @@ public class Main extends ApplicationAdapter {
         camera.setToOrtho(false, 800f/PPM, 480f/PPM); // set the camera size
         // handles camera movement
         CameraSystem cameraSystem = new CameraSystem(camera);
-        world = new World(new Vector2(0, -6f), true);
+        world = new World(new Vector2(0, -2f), true);
         debugRenderer = new Box2DDebugRenderer();
 
         // Ashley setup

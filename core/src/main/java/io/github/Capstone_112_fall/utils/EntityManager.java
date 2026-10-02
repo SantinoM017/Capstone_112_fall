@@ -69,8 +69,7 @@ public class EntityManager {
 
     // Written by Claude (Anthropic AI assistant)
     public Entity createMapEntity(MapEntityData d) {
-        // atlas region overrides the tileset texture if set
-        TextureRegion region = d.regionName != null ? atlas.findRegion(d.regionName) : d.region;
+        TextureRegion region = atlas.findRegion(d.type);
 
         switch(d.type) {
             // add cases here for special blocks (key, lucky, save, spike...)
@@ -129,7 +128,7 @@ public class EntityManager {
 
         // Create shape for body
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(0.48f, 0.5f);
+        shape.setAsBox(0.38f, 0.45f);
 
         // Attach shape and fixtures to body
         FixtureDef fDef = new FixtureDef();
@@ -143,7 +142,7 @@ public class EntityManager {
 
         // Create shape for foot
         PolygonShape shape2 = new PolygonShape();
-        shape2.setAsBox(0.40f, 0.1f, new Vector2(0, -0.45f), 0);
+        shape2.setAsBox(0.35f, 0.1f, new Vector2(0, -0.40f), 0);
 
         // Attach foot to body
         FixtureDef fDef2 = new FixtureDef();

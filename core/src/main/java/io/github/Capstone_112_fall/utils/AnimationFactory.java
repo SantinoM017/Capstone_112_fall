@@ -21,15 +21,19 @@ public class AnimationFactory {
 
         animComp.animations.put(
             StateComponent.State.IDLE,
-            createAnimation("box_man", 0.1f, Animation.PlayMode.LOOP)
+            createAnimation("character", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
             StateComponent.State.WALKING,
-            createAnimation("box_man_walk", 0.2f, Animation.PlayMode.LOOP)
+            createAnimation("character_walk", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
             StateComponent.State.JUMPING,
-            createAnimation("box_man_jump", 0.1f, Animation.PlayMode.NORMAL)
+            createAnimation("character_jump", 0.1f, Animation.PlayMode.NORMAL)
+        );
+        animComp.animations.put(
+            StateComponent.State.FALLING,
+            createAnimation("character_fall", 0.1f, Animation.PlayMode.NORMAL)
         );
         return animComp;
     }

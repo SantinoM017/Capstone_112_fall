@@ -31,3 +31,19 @@ Useful Gradle tasks and flags:
 
 Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
 For example, `core:clean` removes `build` folder only from the `core` project.
+
+### AI Usage
+
+This project has used AI tools and agents to assist in the development of this project. 
+
+- Gemini Flash:
+    - Used to help structure the project and provide help in learning libGDX, Box2D, and AshleyECS API's
+- Junie/Github Copilot:
+    - Used to help write code and provide suggestions for code completion and refactoring.
+    - Used to help explain parts of the code and to explain any questions or issues I am having with the code
+- Claude (built-in Agent):
+    - Used to generate code or provide suggestions.
+    - Used to refactor large/complex parts of the codebase.
+
+Important prompts:
+- I am in a second year comp sci class and for my intended capstone project I am using libgdx with ashley, box2d, etc. to build a 2d platformer/boss fighting game with the help of AI and AI agents. I have already worked with libgdx building a simple 2d platformer game without any external extensions or packs other than tiled with a working physics system and block behavior system using composition (similar to ECS in a way) but no entities. The main goal is to obviously complete the project by december but to also actually understand what I'm doing. (to Gemini)

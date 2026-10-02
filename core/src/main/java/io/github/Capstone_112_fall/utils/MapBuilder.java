@@ -27,13 +27,6 @@ public class MapBuilder {
         return out;
     }
 
-    // reads a single layer
-//    public static Array<MapEntityData> parseLayer(MapLayer layer, float ppm) {
-//        Array<MapEntityData> out = new Array<>();
-//        parseLayer(layer, ppm, out);
-//        return out;
-//    }
-
     private static void parseLayer(MapLayer layer, float ppm, Array<MapEntityData> out) {
         if(layer == null) return;
         if(layer instanceof TiledMapTileLayer) {
@@ -62,8 +55,7 @@ public class MapBuilder {
                 MapProperties props = new MapProperties();
                 props.putAll(tile.getProperties());
 
-                out.add(new MapEntityData(getType(props), centerX, centerY, widthMeters, heightMeters,
-                    tile.getTextureRegion(), props.get("texture", String.class), props));
+                out.add(new MapEntityData(getType(props), centerX, centerY, widthMeters, heightMeters, props));
             }
         }
 
@@ -91,8 +83,7 @@ public class MapBuilder {
                 float centerX = (tileObject.getX() + width / 2f) / ppm;
                 float centerY = (tileObject.getY() + height / 2f) / ppm;
 
-                out.add(new MapEntityData(getType(props), centerX, centerY, width / ppm, height / ppm,
-                    region, props.get("texture", String.class), props));
+                out.add(new MapEntityData(getType(props), centerX, centerY, width / ppm, height / ppm, props));
             } else if(object instanceof RectangleMapObject) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 MapProperties props = object.getProperties();
@@ -100,8 +91,7 @@ public class MapBuilder {
                 float centerX = (rect.x + rect.width / 2f) / ppm;
                 float centerY = (rect.y + rect.height / 2f) / ppm;
 
-                out.add(new MapEntityData(getType(props), centerX, centerY, rect.width / ppm, rect.height / ppm,
-                    null, props.get("texture", String.class), props));
+                out.add(new MapEntityData(getType(props), centerX, centerY, rect.width / ppm, rect.height / ppm, props));
             }
         }
     }

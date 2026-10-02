@@ -43,7 +43,7 @@ public class PlayerInputSystem extends IteratingSystem {
         // vertical movement. Guardrails to prevent jumping while in the air
         if(Gdx.input.isKeyJustPressed(Input.Keys.W) && grounded.isGrounded){
             box2D.body.applyLinearImpulse(
-                new Vector2(0, 6f),
+                new Vector2(0, 3f),
                 box2D.body.getWorldCenter(),
                 true
             );
