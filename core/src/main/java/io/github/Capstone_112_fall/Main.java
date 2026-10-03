@@ -52,15 +52,7 @@ public class Main extends ApplicationAdapter {
         CameraSystem cameraSystem = new CameraSystem(camera);
         world = new World(new Vector2(0, -2f), true);
         debugRenderer = new Box2DDebugRenderer();
-
-        // Ashley setup
         engine = new Engine();
-        engine.addSystem(new PlayerInputSystem());
-        engine.addSystem(new PhysicsSyncSystem());
-        engine.addSystem(new PhysicsContactSystem(world));
-        engine.addSystem(new PlayerStateSystem());
-        engine.addSystem(cameraSystem);
-        engine.addSystem(new RenderSystem(batch, camera));
 
         // atlas setup
         try {
@@ -72,6 +64,15 @@ public class Main extends ApplicationAdapter {
         AnimationFactory animationFactory = new AnimationFactory(atlas);
         EntityManager entityManager = new EntityManager(engine, animationFactory, world, atlas);
         Entity playerEntity = entityManager.createPlayerEntity(400f/PPM, 320f/PPM);
+
+        // Ashley setup
+        engine.addSystem(new PlayerInputSystem());
+        engine.addSystem(new PhysicsSyncSystem());
+        engine.addSystem(new PhysicsContactSystem(world));
+        engine.addSystem(new PlayerStateSystem());
+        engine.addSystem(new AttackSystem(entityManager));
+        engine.addSystem(cameraSystem);
+        engine.addSystem(new RenderSystem(batch, camera));
 
         // Tiled setup
         try {

@@ -52,6 +52,7 @@ public class EntityManager {
 
         TextureComponent textureComponent = engine.createComponent(TextureComponent.class);
         textureComponent.zIndex = 10;
+        textureComponent.bottomAligned = true;
         player.add(textureComponent);
 
         player.add(animationFactory.createPlayerAnimations(engine));;
@@ -117,6 +118,61 @@ public class EntityManager {
         return block;
     }
 
+    public void createPlayerAttackHitbox(Entity player) {
+        Box2DComponent box2D = player.getComponent(Box2DComponent.class);
+        StateComponent state = player.getComponent(StateComponent.class);
+        PlayerComponent playerComp = player.getComponent(PlayerComponent.class);
+
+        if (box2D == null || box2D.body == null) return;
+
+        // Determine attack direction based on facing direction (-1 for Left, 1 for Right)
+        float direction = !playerComp.isFlipped ? 1.0f : -1.0f;
+
+        // Create sensor fixture offset in front of the player
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(0.16f, 0.4f, new Vector2(0.5f * direction, 0f), 0f);
+
+        FixtureDef fDef = new FixtureDef();
+        fDef.shape = shape;
+        fDef.isSensor = true; // Sensor ensures it detects overlap without physical collision response
+
+        Fixture attackFixture = box2D.body.createFixture(fDef);
+        attackFixture.setUserData("player_attack_hitbox");
+        shape.dispose();
+
+        // Attach tracking component to the entity to manage lifespan
+        AttackHitboxComponent attackComp = engine.createComponent(AttackHitboxComponent.class);
+        attackComp.sensorFixture = attackFixture;
+        attackComp.duration = 0.4f;
+        attackComp.timer = 0f;
+
+        DamageComponent damageComp = engine.createComponent(DamageComponent.class);
+        damageComp.damage = 25;
+
+        player.add(attackComp);
+        player.add(damageComp);
+    }
+
+    public void destroyAttackHitbox(Entity entity) {
+        if (entity == null) return;
+
+        Box2DComponent box2D = entity.getComponent(Box2DComponent.class);
+        AttackHitboxComponent attackComp = entity.getComponent(AttackHitboxComponent.class);
+
+        // Ensure the entity actually has a Box2D body and an active attack component
+        if (attackComp != null) {
+            if (box2D != null && box2D.body != null && attackComp.sensorFixture != null) {
+                // Safely destroy the sensor fixture attached to the body
+                box2D.body.destroyFixture(attackComp.sensorFixture);
+                attackComp.sensorFixture = null;
+            }
+
+            // Clean up components from the Ashley ECS entity
+            entity.remove(AttackHitboxComponent.class);
+            entity.remove(DamageComponent.class);
+        }
+    }
+
     private Body createPlayer(float x, float y){
         // Definition: Type and position
         BodyDef bDef = new BodyDef();
@@ -142,7 +198,7 @@ public class EntityManager {
 
         // Create shape for foot
         PolygonShape shape2 = new PolygonShape();
-        shape2.setAsBox(0.35f, 0.1f, new Vector2(0, -0.40f), 0);
+        shape2.setAsBox(0.36f, 0.1f, new Vector2(0, -0.40f), 0);
 
         // Attach foot to body
         FixtureDef fDef2 = new FixtureDef();

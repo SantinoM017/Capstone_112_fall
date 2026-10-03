@@ -35,6 +35,10 @@ public class AnimationFactory {
             StateComponent.State.FALLING,
             createAnimation("character_fall", 0.1f, Animation.PlayMode.NORMAL)
         );
+        animComp.animations.put(
+            StateComponent.State.ATTACKING,
+            createAnimation("cross-body_sword_swing_frame", 0.1f, Animation.PlayMode.NORMAL)
+        );
         return animComp;
     }
 

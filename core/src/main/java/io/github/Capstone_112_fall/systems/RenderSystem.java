@@ -49,7 +49,7 @@ public class RenderSystem extends EntitySystem {
 
             if(animation != null && state != null && animation.animations.containsKey(state.currentState)) {
                 Animation<TextureRegion> currentAnimation = animation.animations.get(state.currentState);
-                texture.textureRegion = currentAnimation.getKeyFrame(state.stateTime, true);
+                texture.textureRegion = currentAnimation.getKeyFrame(state.stateTime);
             }
 
             // Render the entity
@@ -64,6 +64,9 @@ public class RenderSystem extends EntitySystem {
 
             float drawX = transform.x - originX;
             float drawY = transform.y - originY;
+            if(texture.bottomAligned) {
+                drawY = transform.y - 0.5f - originY + originY * texture.scale;
+            }
 
             if(texture.textureRegion.isFlipX() != texture.flipX) {
                 texture.textureRegion.flip(true, false);

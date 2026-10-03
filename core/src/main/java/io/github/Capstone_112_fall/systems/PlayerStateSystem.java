@@ -32,7 +32,23 @@ public class PlayerStateSystem extends IteratingSystem {
 
         Vector2 velocity = box2D.body.getLinearVelocity();
 
-        if(!grounded.isGrounded) {
+        // flip texture based on velocity
+        if(velocity.x > 0.1f) {
+            texture.flipX = false;
+            player.isFlipped = false;
+        } else if(velocity.x < -0.1f) {
+            texture.flipX = true;
+            player.isFlipped = true;
+        }
+
+        // player movement states: jumping, falling, walking, idle
+        if(player.attackRequested) {
+            if(state.currentState != StateComponent.State.ATTACKING) {
+                player.isAttacking = true;
+                state.setState(StateComponent.State.ATTACKING);
+                state.stateTime = 0f;
+            }
+        } else if(!grounded.isGrounded) {
             if(velocity.y > 0.1f) {
                 state.setState(StateComponent.State.JUMPING);
             } else if (velocity.y < -0.1f) {
@@ -41,15 +57,11 @@ public class PlayerStateSystem extends IteratingSystem {
         } else {
             if(velocity.x != 0) {
                 state.setState(StateComponent.State.WALKING);
-                if(velocity.x > 0.1f) {
-                    texture.flipX = false;
-                } else if(velocity.x < -0.1f) {
-                    texture.flipX = true;
-                }
             } else {
                 state.setState(StateComponent.State.IDLE);
             }
         }
+
         state.stateTime += deltaTime;
 //        System.out.println("State: " + state.currentState);
     }

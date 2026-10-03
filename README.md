@@ -41,9 +41,13 @@ This project has used AI tools and agents to assist in the development of this p
 - Junie/Github Copilot:
     - Used to help write code and provide suggestions for code completion and refactoring.
     - Used to help explain parts of the code and to explain any questions or issues I am having with the code
+    - Used to debug code
+    - Helped debug the AttackSystem and PlayerInputSystem
 - Claude (built-in Agent):
     - Used to generate code or provide suggestions.
     - Used to refactor large/complex parts of the codebase.
+    - Used to create the tiled to java parser
+    - Ran out of credits very quickly so switched to CoPilot
 
 Important prompts:
 - I am in a second year comp sci class and for my intended capstone project I am using libgdx with ashley, box2d, etc. to build a 2d platformer/boss fighting game with the help of AI and AI agents. I have already worked with libgdx building a simple 2d platformer game without any external extensions or packs other than tiled with a working physics system and block behavior system using composition (similar to ECS in a way) but no entities. The main goal is to obviously complete the project by december but to also actually understand what I'm doing. (to Gemini)

@@ -8,6 +8,7 @@ public class TextureComponent implements Component {
     public TextureRegion textureRegion;
     public int zIndex = 0;
     public boolean flipX = false;
+    public boolean bottomAligned = false;
     // Written by Claude (Anthropic AI assistant)
-    public float scale = 2f; // atlas art is 64px per meter, so default to half size
+    public float scale = 1f;
 }

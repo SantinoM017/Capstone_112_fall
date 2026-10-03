@@ -41,7 +41,9 @@ public class PlayerInputSystem extends IteratingSystem {
         }
 
         // vertical movement. Guardrails to prevent jumping while in the air
-        if(Gdx.input.isKeyJustPressed(Input.Keys.W) && grounded.isGrounded){
+        player.jumpCooldown = Math.max(0f, player.jumpCooldown - deltaTime); // decrease cooldown timer
+        if(Gdx.input.isKeyPressed(Input.Keys.W) && grounded.isGrounded && player.jumpCooldown == 0f){
+            player.jumpCooldown = 0.5f;
             box2D.body.applyLinearImpulse(
                 new Vector2(0, 3f),
                 box2D.body.getWorldCenter(),
@@ -49,8 +51,17 @@ public class PlayerInputSystem extends IteratingSystem {
             );
         }
 
+        // cancels jump if player releases jump key while moving upwards
         if(!Gdx.input.isKeyPressed(Input.Keys.W) && vel.y > 0){
-            box2D.body.setLinearVelocity(vel.x, vel.y * 0.5f);
+            box2D.body.setLinearVelocity(vel.x, vel.y * 0.33f);
+        }
+
+        // player attack input
+        player.attackCooldown = Math.max(0f, player.attackCooldown - deltaTime); // decrease cooldown timer
+        if((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown == 0f){
+//            System.out.println("Attack requested");
+            player.attackRequested = true;
+            player.attackCooldown = 0.5f;
         }
     }
 }
