@@ -25,7 +25,7 @@ import io.github.Capstone_112_fall.utils.MapBuilder;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
-    public static final float PPM = 32.0f; // 32 pixels per meter
+    public static final float PPM = 16.0f;
     private SpriteBatch batch; // renders sprites
     private OrthographicCamera camera; // world camera
     private Viewport viewport; // manages the camera and screen size
@@ -37,8 +37,8 @@ public class Main extends ApplicationAdapter {
     private TextureAtlas atlas;
 
     // viewport size
-    private final static float V_WIDTH = 25.0f;
-    private final static float V_HEIGHT = 15.0f;
+    private static final float V_WIDTH = 20;
+    private static final float V_HEIGHT = 10f;
 
     @Override
     public void create() {
@@ -47,7 +47,7 @@ public class Main extends ApplicationAdapter {
         viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera); // adjusts viewport based on screen size
         viewport.apply();
         camera.position.set(V_WIDTH/2, V_HEIGHT/2, 0); // centers camera to middle of viewport
-        camera.setToOrtho(false, 800f/PPM, 480f/PPM); // set the camera size
+        camera.setToOrtho(false, V_WIDTH, V_HEIGHT); // set the camera size
         // handles camera movement
         CameraSystem cameraSystem = new CameraSystem(camera);
         world = new World(new Vector2(0, -2f), true);
@@ -63,37 +63,43 @@ public class Main extends ApplicationAdapter {
 
         AnimationFactory animationFactory = new AnimationFactory(atlas);
         EntityManager entityManager = new EntityManager(engine, animationFactory, world, atlas);
-        Entity playerEntity = entityManager.createPlayerEntity(400f/PPM, 320f/PPM);
 
-        // Ashley setup
-        engine.addSystem(new PlayerInputSystem());
-        engine.addSystem(new PhysicsSyncSystem());
-        engine.addSystem(new PhysicsContactSystem(world));
-        engine.addSystem(new PlayerStateSystem());
-        engine.addSystem(new AttackSystem(entityManager));
-        engine.addSystem(cameraSystem);
-        engine.addSystem(new RenderSystem(batch, camera));
-
-        // Tiled setup
         try {
             map = new TmxMapLoader().load("levels/level1.tmx"); // reads from level file
         } catch(SerializationException e){
             System.out.println("Level not found");
         }
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1/PPM); // draws the map converting from pixels to meters
+
+        int mapWidthTiles = map.getProperties().get("width", Integer.class);
+        int mapHeightTiles = map.getProperties().get("height", Integer.class);
+        int tileWidth = map.getProperties().get("tilewidth", Integer.class);
+        int tileHeight = map.getProperties().get("tileheight", Integer.class);
+        float mapWidth = mapWidthTiles * tileWidth / PPM;
+        float mapHeight = mapHeightTiles * tileHeight / PPM;
+        Entity playerEntity = entityManager.createPlayerEntity(mapWidth / 2f, mapHeight / 2f);
+        entityManager.createMapSideBoundaries(mapWidth, mapHeight);
+
+        // Ashley setup
+        engine.addSystem(new PlayerInputSystem());
+        engine.addSystem(new PhysicsSyncSystem());
+        engine.addSystem(new PhysicsContactSystem(world));
+        engine.addSystem(new SlopeFrictionSystem());
+        engine.addSystem(new PlayerStateSystem());
+        engine.addSystem(new AttackSystem(entityManager));
+        engine.addSystem(cameraSystem);
+        engine.addSystem(new RenderSystem(batch, camera));
+
         // Modified by Claude (Anthropic AI assistant)
         entityManager.createMapEntities(MapBuilder.parse(map, PPM)); // turns tiles and objects into entities
 
-        // treat tiles as 1x1 meters, so no conversion rate needed
-        int mapWidthTiles = map.getProperties().get("width", Integer.class);
-        int mapHeightTiles = map.getProperties().get("height", Integer.class);
-        cameraSystem.setMapBounds(mapWidthTiles, (mapHeightTiles));
+        cameraSystem.setMapBounds(mapWidth, mapHeight);
     }
 
     @Override
     public void render() {
         ScreenUtils.clear(1f, 1f, 1f, 1f); // refresh the screen
-        world.step(1/60f, 6, 2); // advance world by 1/60th of a second
+        world.step(1/60f, 6, 2); // advance the physics simulation
         engine.update(Gdx.graphics.getDeltaTime()); // runs the engine
         camera.update(); // update the camera
         mapRenderer.setView(camera);

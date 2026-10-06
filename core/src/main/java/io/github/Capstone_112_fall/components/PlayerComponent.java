@@ -9,4 +9,5 @@ public class PlayerComponent implements Component {
     public float attackCooldown;
     public float jumpCooldown;
     public boolean isFlipped;
+    public boolean isMoving;
 }

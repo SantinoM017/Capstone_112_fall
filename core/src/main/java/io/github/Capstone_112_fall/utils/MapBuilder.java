@@ -55,7 +55,8 @@ public class MapBuilder {
                 MapProperties props = new MapProperties();
                 props.putAll(tile.getProperties());
 
-                out.add(new MapEntityData(getType(props), centerX, centerY, widthMeters, heightMeters, props));
+                out.add(new MapEntityData(getType(props), centerX, centerY, widthMeters, heightMeters,
+                    0f, cell.getFlipHorizontally(), cell.getFlipVertically(), props));
             }
         }
 
@@ -83,7 +84,8 @@ public class MapBuilder {
                 float centerX = (tileObject.getX() + width / 2f) / ppm;
                 float centerY = (tileObject.getY() + height / 2f) / ppm;
 
-                out.add(new MapEntityData(getType(props), centerX, centerY, width / ppm, height / ppm, props));
+                out.add(new MapEntityData(getType(props), centerX, centerY, width / ppm, height / ppm,
+                    -tileObject.getRotation(), tileObject.isFlipHorizontally(), tileObject.isFlipVertically(), props));
             } else if(object instanceof RectangleMapObject) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 MapProperties props = object.getProperties();
@@ -91,7 +93,8 @@ public class MapBuilder {
                 float centerX = (rect.x + rect.width / 2f) / ppm;
                 float centerY = (rect.y + rect.height / 2f) / ppm;
 
-                out.add(new MapEntityData(getType(props), centerX, centerY, rect.width / ppm, rect.height / ppm, props));
+                out.add(new MapEntityData(getType(props), centerX, centerY, rect.width / ppm, rect.height / ppm,
+                    0f, false, false, props));
             }
         }
     }

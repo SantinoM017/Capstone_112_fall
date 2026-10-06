@@ -6,10 +6,12 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.Array;
 import io.github.Capstone_112_fall.components.AnimationComponent;
 import io.github.Capstone_112_fall.components.StateComponent;
 import io.github.Capstone_112_fall.components.TextureComponent;
 import io.github.Capstone_112_fall.components.TransformComponent;
+import io.github.Capstone_112_fall.Main;
 
 // draws the actual sprites
 public class RenderSystem extends EntitySystem {
@@ -41,7 +43,16 @@ public class RenderSystem extends EntitySystem {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
+        Array<Entity> sortedEntities = new Array<>(renderQueue.size());
         for(Entity entity : renderQueue) {
+            sortedEntities.add(entity);
+        }
+        sortedEntities.sort((first, second) -> Integer.compare(
+            textureMapper.get(first).zIndex,
+            textureMapper.get(second).zIndex
+        ));
+
+        for(Entity entity : sortedEntities) {
             TextureComponent texture = textureMapper.get(entity);
             TransformComponent transform = transformMapper.get(entity);
             AnimationComponent animation = animationMapper.get(entity);
@@ -55,9 +66,20 @@ public class RenderSystem extends EntitySystem {
             // Render the entity
             if(texture.textureRegion == null) continue;
 
+            if(texture.sourceRegion != texture.textureRegion) {
+                texture.sourceRegion = texture.textureRegion;
+                texture.renderRegion = new TextureRegion(texture.textureRegion);
+            }
+            if(texture.renderRegion.isFlipX() != texture.flipX) {
+                texture.renderRegion.flip(true, false);
+            }
+            if(texture.renderRegion.isFlipY() != texture.flipY) {
+                texture.renderRegion.flip(false, true);
+            }
+
             // scale by PPM (pixels per meter) to convert from Box2D units to pixels
-            float width = texture.textureRegion.getRegionWidth() / 32f;
-            float height = texture.textureRegion.getRegionHeight() / 32f;
+            float width = texture.renderRegion.getRegionWidth() / Main.PPM;
+            float height = texture.renderRegion.getRegionHeight() / Main.PPM;
 
             float originX = width / 2f;
             float originY = height / 2f;
@@ -68,13 +90,9 @@ public class RenderSystem extends EntitySystem {
                 drawY = transform.y - 0.5f - originY + originY * texture.scale;
             }
 
-            if(texture.textureRegion.isFlipX() != texture.flipX) {
-                texture.textureRegion.flip(true, false);
-            }
-
             // Modified by Claude (Anthropic AI assistant)
             batch.draw(
-                texture.textureRegion,
+                texture.renderRegion,
                 drawX, drawY,
                 originX, originY,
                 width, height,
