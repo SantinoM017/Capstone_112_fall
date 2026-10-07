@@ -9,7 +9,8 @@ public class StateComponent implements Component {
         WALKING,
         JUMPING,
         FALLING,
-        ATTACKING
+        ATTACKING,
+        DEAD
     }
 
     public float stateTime = 0f;

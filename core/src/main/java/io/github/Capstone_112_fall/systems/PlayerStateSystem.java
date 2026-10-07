@@ -14,6 +14,7 @@ public class PlayerStateSystem extends IteratingSystem {
     private final ComponentMapper<Box2DComponent> box2DComponent = ComponentMapper.getFor(Box2DComponent.class);
     private final ComponentMapper<GroundedComponent> groundedComponent = ComponentMapper.getFor(GroundedComponent.class);
     private final ComponentMapper<TextureComponent> textureComponent = ComponentMapper.getFor(TextureComponent.class);
+    private final ComponentMapper<HealthComponent> healthComponent = ComponentMapper.getFor(HealthComponent.class);
 
     public PlayerStateSystem() {
         super(Family.all(StateComponent.class, PlayerComponent.class,
@@ -27,6 +28,7 @@ public class PlayerStateSystem extends IteratingSystem {
         Box2DComponent box2D = box2DComponent.get(entity);
         GroundedComponent grounded = groundedComponent.get(entity);
         TextureComponent texture = textureComponent.get(entity);
+        HealthComponent health = healthComponent.get(entity);
 
         if(box2D.body == null) return;
 
@@ -60,6 +62,10 @@ public class PlayerStateSystem extends IteratingSystem {
             } else {
                 state.setState(StateComponent.State.IDLE);
             }
+        }
+
+        if(health.hp <= 0) {
+            state.setState(StateComponent.State.DEAD);
         }
 
         state.stateTime += deltaTime;

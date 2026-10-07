@@ -47,7 +47,7 @@ public class PlayerInputSystem extends IteratingSystem {
         Vector2 currentVel = box2D.body.getLinearVelocity();
 
         // --- 1. JUMP EXECUTION ---
-        boolean jumpRequested = Gdx.input.isKeyJustPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.W);
+        boolean jumpRequested = Gdx.input.isKeyPressed(Input.Keys.W);
 
         // Ensure jump only triggers when fully grounded and NOT already ascending
         if (jumpRequested && grounded.isGrounded && currentVel.y <= 0.05f && player.jumpCooldown == 0f) {
@@ -91,6 +91,19 @@ public class PlayerInputSystem extends IteratingSystem {
         if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown == 0f) {
             player.attackRequested = true;
             player.attackCooldown = 0.5f;
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+            player.isDroppingThrough = true;
+            player.dropThroughTimer = 0.1f;
+            box2D.body.setAwake(true);
+        }
+
+        if (player.isDroppingThrough) {
+            player.dropThroughTimer -= deltaTime;
+            if (player.dropThroughTimer <= 0f) {
+                player.isDroppingThrough = false;
+            }
         }
     }
 

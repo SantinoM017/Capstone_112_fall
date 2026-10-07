@@ -25,7 +25,7 @@ public class EntityManager {
         this.world = world;
     }
 
-    public Entity createPlayerEntity(float x, float y){
+    public Entity createPlayerEntity(float x, float y) {
         Entity player = engine.createEntity();
         Body body = createPlayer(x, y);
 
@@ -46,7 +46,6 @@ public class EntityManager {
         // create and add grounded component\
         GroundedComponent groundedComponent = engine.createComponent(GroundedComponent.class);
         player.add(groundedComponent);
-        body.setUserData(groundedComponent); // attach grounded component to body for collision detection
 
         StateComponent stateComponent = engine.createComponent(StateComponent.class);
         player.add(stateComponent);
@@ -56,7 +55,14 @@ public class EntityManager {
         textureComponent.bottomAligned = true;
         player.add(textureComponent);
 
-        player.add(animationFactory.createPlayerAnimations(engine));;
+        player.add(animationFactory.createPlayerAnimations(engine));
+        ;
+
+        HealthComponent healthComponent = engine.createComponent(HealthComponent.class);
+        healthComponent.maxHp = 100;
+        healthComponent.hp = 100;
+        player.add(healthComponent);
+        body.setUserData(player);
         engine.addEntity(player);
         return player;
     }
@@ -64,7 +70,7 @@ public class EntityManager {
     // Written by Claude (Anthropic AI assistant)
     // creates entities from the values read by MapBuilder
     public void createMapEntities(Array<MapEntityData> data) {
-        for(MapEntityData d : data) {
+        for (MapEntityData d : data) {
             createMapEntity(d);
         }
     }
@@ -199,31 +205,30 @@ public class EntityManager {
     private Entity createMapEntity(MapEntityData d) {
         TextureRegion region = atlas.findRegion(d.type);
 
-        if(d.properties.get("decoration", false, Boolean.class)) {
+        if (d.properties.get("decoration", false, Boolean.class)) {
             return createDecorationBlock(d, region);
         }
-        if(d.properties.get("slab", false, Boolean.class)) {
-            return createSlabBlock(d, region);
-        }
-        if(d.properties.get("slope", false, Boolean.class)) {
+        if (d.properties.get("slope", false, Boolean.class)) {
             return createSlopeBlock(d, region, false);
         }
-        if(d.properties.get("inverted_slope", false, Boolean.class)) {
+        if (d.properties.get("inverted_slope", false, Boolean.class)) {
             return createSlopeBlock(d, region, true);
         }
-        switch(d.type) {
-            // add cases here for special blocks (key, lucky, save, spike...)
-            default:
-                return createStaticBlock(d, region);
+        if(d.properties.get("sensor", false, Boolean.class)) {
+            return createRectangleBlock(d, region, true);
         }
+
+        return createRectangleBlock(d, region, false);
     }
 
-    private Entity createStaticBlock(MapEntityData data, TextureRegion region) {
-        Entity block = createBox2DBody(data.x, data.y, data.width, data.height, false);
+    private Entity createRectangleBlock(MapEntityData data, TextureRegion region, boolean isSensor) {
+        Entity block = createBox2DBody(data.x, data.y, data.width, data.height, false, data, isSensor);
 
         createTransformComponent(block, data.x, data.y, data.rotation);
 
-        createTextureComponent(block, region, 1, data.flipX, data.flipY, data.width, region.getRegionWidth());
+        if (region != null) {
+            createTextureComponent(block, region, 1, data.flipX, data.flipY, data.width, region.getRegionWidth());
+        }
 
         engine.addEntity(block);
         return block;
@@ -235,17 +240,6 @@ public class EntityManager {
         createTransformComponent(block, data.x, data.y, data.rotation);
 
         createTextureComponent(block, region, 0, data.flipX, data.flipY, data.width, region.getRegionWidth());
-
-        engine.addEntity(block);
-        return block;
-    }
-
-    private Entity createSlabBlock(MapEntityData data, TextureRegion region) {
-        Entity block = createBox2DBody(data.x, data.y, data.width, 0.01f, false);
-
-        createTransformComponent(block, data.x, data.y, data.rotation);
-
-        createTextureComponent(block, region, 1, data.flipX, data.flipY, data.width, region.getRegionWidth());
 
         engine.addEntity(block);
         return block;
@@ -263,15 +257,15 @@ public class EntityManager {
         float halfH = data.height / 2f;
 
         Vector2[] vertices = new Vector2[3];
-        if(inverted && !data.flipX){
-            vertices[0] = new Vector2(-halfW, -halfH);   // Bottom Left
-            vertices[1] = new Vector2(-halfW, halfH);  // Top Left
-            vertices[2] = new Vector2(halfW, halfH); // Top Right
-        } else if(inverted){
+        if (inverted && !data.flipX) {
             vertices[0] = new Vector2(-halfW, halfH);   // Top Left
             vertices[1] = new Vector2(halfW, halfH);  // Top Right
             vertices[2] = new Vector2(halfW, -halfH); // Bottom Right
-        }else if(data.flipX){
+        } else if (inverted) {
+            vertices[0] = new Vector2(-halfW, halfH);   // Top Left
+            vertices[1] = new Vector2(halfW, halfH);  // Top Right
+            vertices[2] = new Vector2(-halfW, -halfH); // Bottom Left
+        } else if (data.flipX) {
             vertices[0] = new Vector2(-halfW, -halfH);   // Bottom Left
             vertices[1] = new Vector2(halfW, -halfH);  // Bottom Right
             vertices[2] = new Vector2(halfW, halfH); // Top Right
@@ -298,13 +292,12 @@ public class EntityManager {
 
         createTransformComponent(entity, data.x, data.y, data.rotation);
 
-        createTextureComponent(entity, region, 1, data.flipX, data.flipY, data.width, region.getRegionWidth());
-
+        if (region != null) {
+            createTextureComponent(entity, region, 1, data.flipX, data.flipY, data.width, region.getRegionWidth());
+        }
         engine.addEntity(entity);
         return entity;
     }
-
-
 
     private void createBoundaryWall(float x, float y, float width, float height) {
         BodyDef bodyDef = new BodyDef();
@@ -318,7 +311,7 @@ public class EntityManager {
         shape.dispose();
     }
 
-    private Entity createBox2DBody(float x, float y, float width, float height, boolean isDynamic) {
+    private Entity createBox2DBody(float x, float y, float width, float height, boolean isDynamic, MapEntityData data, boolean isSensor) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = isDynamic ? BodyDef.BodyType.DynamicBody : BodyDef.BodyType.StaticBody;
         bodyDef.position.set(x, y);
@@ -329,16 +322,27 @@ public class EntityManager {
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
-        fixtureDef.friction = 0.5f;
-        fixtureDef.density = 1f;
+        if(isSensor) {
+            fixtureDef.isSensor = true;
+        } else {
+            fixtureDef.friction = 0.5f;
+            fixtureDef.density = 1f;
+        }
 
         Entity entity = engine.createEntity();
 
-        body.createFixture(fixtureDef);
+        Fixture fixture = body.createFixture(fixtureDef);
+        String property = data.properties.get("property", "", String.class);
+        switch (property) {
+            case "oneWay": fixture.setUserData("one_way_platform"); break;
+            case "spike": fixture.setUserData("spike"); break;
+            default: fixture.setUserData("static_block"); break;
+        }
         shape.dispose();
 
         Box2DComponent box2DComponent = engine.createComponent(Box2DComponent.class);
         box2DComponent.body = body;
+
         return entity;
     }
 

@@ -10,4 +10,6 @@ public class PlayerComponent implements Component {
     public float jumpCooldown;
     public boolean isFlipped;
     public boolean isMoving;
+    public boolean isDroppingThrough;
+    public float dropThroughTimer;
 }

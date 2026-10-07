@@ -6,6 +6,14 @@ import com.badlogic.ashley.core.Component;
 public class HealthComponent implements Component {
     public int hp;
     public int maxHp;
-    public boolean isVulnerable;
     public float invulnerabilityTimer;
+    public final float invulnerabilityDuration = 0.5f;
+
+    public void takeDamage(int damage) {
+        if (invulnerabilityTimer <= 0) {
+            hp -= damage;
+            invulnerabilityTimer = invulnerabilityDuration;
+        }
+
+    }
 }

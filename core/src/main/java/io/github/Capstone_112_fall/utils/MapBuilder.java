@@ -1,15 +1,19 @@
 package io.github.Capstone_112_fall.utils;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.particles.values.MeshSpawnShapeValue;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.objects.TiledMapTileMapObject;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.utils.Array;
 
 // Code in this file was written by Claude (Anthropic AI assistant)
@@ -66,8 +70,8 @@ public class MapBuilder {
 
     private static void parseObjectLayer(MapLayer layer, float ppm, Array<MapEntityData> out) {
         // iterate through every object
-        for(MapObject object : layer.getObjects()) {
-            if(object instanceof TiledMapTileMapObject) {
+        for (MapObject object : layer.getObjects()) {
+            if (object instanceof TiledMapTileMapObject) {
                 // objects placed with the tile tool
                 TiledMapTileMapObject tileObject = (TiledMapTileMapObject) object;
                 TiledMapTile tile = tileObject.getTile();
@@ -86,7 +90,7 @@ public class MapBuilder {
 
                 out.add(new MapEntityData(getType(props), centerX, centerY, width / ppm, height / ppm,
                     -tileObject.getRotation(), tileObject.isFlipHorizontally(), tileObject.isFlipVertically(), props));
-            } else if(object instanceof RectangleMapObject) {
+            } else if (object instanceof RectangleMapObject) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 MapProperties props = object.getProperties();
 
@@ -95,6 +99,40 @@ public class MapBuilder {
 
                 out.add(new MapEntityData(getType(props), centerX, centerY, rect.width / ppm, rect.height / ppm,
                     0f, false, false, props));
+            } else if (object instanceof PolygonMapObject) {
+                PolygonMapObject polyObject = (PolygonMapObject) object;
+                Polygon polygon = polyObject.getPolygon();
+                MapProperties props = object.getProperties();
+
+                // Transformed vertices give absolute pixel coordinates [x0, y0, x1, y1, x2, y2, ...]
+                float[] worldVertices = polygon.getTransformedVertices();
+                float[] scaledVertices = new float[worldVertices.length];
+
+                // Scale pixel coordinates down to Box2D meters
+                for (int i = 0; i < worldVertices.length; i++) {
+                    scaledVertices[i] = worldVertices[i] / ppm;
+                }
+
+                // Calculate bounding center for entity positioning
+                float minX = scaledVertices[0], maxX = scaledVertices[0];
+                float minY = scaledVertices[1], maxY = scaledVertices[1];
+
+                for (int i = 0; i < scaledVertices.length; i += 2) {
+                    minX = Math.min(minX, scaledVertices[i]);
+                    maxX = Math.max(maxX, scaledVertices[i]);
+                    minY = Math.min(minY, scaledVertices[i + 1]);
+                    maxY = Math.max(maxY, scaledVertices[i + 1]);
+                }
+
+                float centerX = (minX + maxX) / 2f;
+                float centerY = (minY + maxY) / 2f;
+                float width = maxX - minX;
+                float height = maxY - minY;
+
+                boolean flipX = props.get("flipX", false, Boolean.class);
+
+                out.add(new MapEntityData(getType(props), centerX, centerY, width, height,
+                    polygon.getRotation(), flipX, false, props));
             }
         }
     }

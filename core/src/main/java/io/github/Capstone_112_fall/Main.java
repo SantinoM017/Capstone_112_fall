@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -17,14 +18,15 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.SerializationException;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import io.github.Capstone_112_fall.Screens.MainScreen;
 import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.systems.*;
 import io.github.Capstone_112_fall.utils.AnimationFactory;
 import io.github.Capstone_112_fall.utils.EntityManager;
 import io.github.Capstone_112_fall.utils.MapBuilder;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class Main extends ApplicationAdapter {
+public class Main extends ScreenAdapter {
+    private final MainScreen game;
     public static final float PPM = 16.0f;
     private SpriteBatch batch; // renders sprites
     private OrthographicCamera camera; // world camera
@@ -40,8 +42,12 @@ public class Main extends ApplicationAdapter {
     private static final float V_WIDTH = 20;
     private static final float V_HEIGHT = 10f;
 
+    public Main(MainScreen game) {
+        this.game = game;
+    }
+
     @Override
-    public void create() {
+    public void show() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera); // adjusts viewport based on screen size
@@ -89,6 +95,8 @@ public class Main extends ApplicationAdapter {
         engine.addSystem(new AttackSystem(entityManager));
         engine.addSystem(cameraSystem);
         engine.addSystem(new RenderSystem(batch, camera));
+        engine.addSystem(new DeathSystem(game));
+        engine.addSystem(new HealthSystem());
 
         // Modified by Claude (Anthropic AI assistant)
         entityManager.createMapEntities(MapBuilder.parse(map, PPM)); // turns tiles and objects into entities
@@ -97,14 +105,14 @@ public class Main extends ApplicationAdapter {
     }
 
     @Override
-    public void render() {
+    public void render(float delta) {
         ScreenUtils.clear(1f, 1f, 1f, 1f); // refresh the screen
         world.step(1/60f, 6, 2); // advance the physics simulation
-        engine.update(Gdx.graphics.getDeltaTime()); // runs the engine
+        engine.update(delta); // runs the engine
         camera.update(); // update the camera
         mapRenderer.setView(camera);
         mapRenderer.render();
-        debugRenderer.render(world, camera.combined);
+//        debugRenderer.render(world, camera.combined);
 
     }
 
@@ -124,4 +132,6 @@ public class Main extends ApplicationAdapter {
     public void resize(int width, int height) {
         viewport.update(width, height);
     }
+
+
 }

@@ -1,10 +1,10 @@
 {
-    "activeFile": "assets/levels/32x16 tiles.tsx",
+    "activeFile": "assets/levels/16x16 tiles.tsx",
     "expandedProjectPaths": [
-        "assets/levels",
+        "assets",
         ".idea",
         ".",
-        "assets"
+        "assets/levels"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -17,12 +17,12 @@
             "scaleInEditor": 1
         },
         "assets/levels/16x16 tiles.tsx": {
-            "scaleInDock": 3,
+            "scaleInDock": 2,
             "scaleInEditor": 5.5
         },
         "assets/levels/32x16 tiles.tsx": {
             "scaleInDock": 1,
-            "scaleInEditor": 8
+            "scaleInEditor": 5.5
         },
         "assets/levels/8. Samurai Village & Wooden Structures.tsx": {
             "scaleInDock": 1,
@@ -83,7 +83,7 @@
             "scale": 4,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 445.375,
+                "x": 245.625,
                 "y": 76.625
             }
         },
@@ -116,15 +116,15 @@
         "assets/levels/32x16 tiles.tsx"
     ],
     "project": "level1.tiled-project",
-    "property.type": "bool",
+    "property.type": "string",
     "recentFiles": [
         "assets/levels/level1.tmx",
         "assets/levels/Building1.tsx",
         "assets/levels/Building2.tsx",
         "assets/levels/Building3.tsx",
         "assets/levels/Tree 48x64.tsx",
-        "assets/levels/16x16 tiles.tsx",
         "assets/levels/32x16 tiles.tsx",
+        "assets/levels/16x16 tiles.tsx",
         "assets/levels/16x16 Tiles.tsx",
         "assets/levels/AssetSheet_Pink.tsx",
         "assets/levels/blocks2.tsx",
