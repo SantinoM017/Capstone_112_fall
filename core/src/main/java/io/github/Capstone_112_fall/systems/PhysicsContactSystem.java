@@ -5,15 +5,17 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import io.github.Capstone_112_fall.components.DamageComponent;
 import io.github.Capstone_112_fall.components.GroundedComponent;
 import io.github.Capstone_112_fall.components.HealthComponent;
 import io.github.Capstone_112_fall.components.PlayerComponent;
 
-// uses contactlistener to check if the player is grounded or not
+// checks for all contacts
 public class PhysicsContactSystem extends EntitySystem implements ContactListener {
     private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private final ComponentMapper<GroundedComponent> groundedMapper = ComponentMapper.getFor(GroundedComponent.class);
     private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
+    private final ComponentMapper<DamageComponent> damageMapper = ComponentMapper.getFor(DamageComponent.class);
     private final Vector2 tempVertex = new Vector2(); // Reusable vector to prevent GC allocation
 
     public PhysicsContactSystem(World world) {
@@ -27,6 +29,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         checkFootContact(fixtureA, fixtureB, true);
         checkSensorContact(fixtureA, fixtureB, true);
+        checkPlayerAttackContact(fixtureA, fixtureB, true);
     }
 
     @Override
@@ -36,6 +39,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         checkFootContact(fixtureA, fixtureB, false);
         checkSensorContact(fixtureA, fixtureB, false);
+        checkPlayerAttackContact(fixtureA, fixtureB, false);
     }
 
     @Override
@@ -91,6 +95,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         }
 
         Object sensorTag = sensorFixture.getUserData();
+        Object sensorBodyData = sensorFixture.getBody().getUserData();
         Object bodyUserData = playerFixture.getBody().getUserData();
 
         if (sensorTag == null || !(bodyUserData instanceof Entity)) {
@@ -100,17 +105,50 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Entity playerEntity = (Entity) bodyUserData;
         PlayerComponent player = playerMapper.get(playerEntity);
         HealthComponent health = healthMapper.get(playerEntity);
-        if (player == null) return;
+        if (player == null || health == null) return;
+
+        Entity sensorEntity = (Entity) sensorBodyData;
 
         String sensorType = sensorTag.toString();
 
         // Dispatch logic based on sensor type string
         switch (sensorType) {
             case "spike":
-                if (isBegin) {
-                    health.takeDamage(20);
-                    System.out.println(health.hp);
+                if(isBegin) {
+                    health.takingDamageFrom = sensorEntity;
+                    health.isTakingDamage = true;
+                } else {
+                    health.isTakingDamage = false;
                 }
+
+        }
+    }
+
+    private void checkPlayerAttackContact(Fixture fixtureA, Fixture fixtureB, boolean isBegin) {
+        Fixture attackFixture = null;
+        Fixture enemyHurtboxFixture = null;
+
+
+        if ("player_attack_hitbox".equals(fixtureA.getUserData())) attackFixture = fixtureA;
+        if ("player_attack_hitbox".equals(fixtureB.getUserData())) attackFixture = fixtureB;
+
+        if ("enemy_hurtbox".equals(fixtureA.getUserData())) enemyHurtboxFixture = fixtureA;
+        if ("enemy_hurtbox".equals(fixtureB.getUserData())) enemyHurtboxFixture = fixtureB;
+
+        // Both a valid attack fixture and a sensor fixture must be present
+        if (attackFixture == null || enemyHurtboxFixture == null) {
+            return;
+        }
+
+        if(isBegin) {
+            Entity enemy = (Entity) enemyHurtboxFixture.getBody().getUserData();
+            Entity player = (Entity) attackFixture.getBody().getUserData();
+            DamageComponent damageComponent = damageMapper.get(player);
+            int damage = damageComponent.damage;
+            HealthComponent healthComponent = healthMapper.get(enemy);
+            int health = healthComponent.hp;
+            health -= damage;
+            System.out.println("Enemy attacked");
         }
     }
 

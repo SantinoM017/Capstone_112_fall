@@ -112,7 +112,7 @@ public class Main extends ScreenAdapter {
         camera.update(); // update the camera
         mapRenderer.setView(camera);
         mapRenderer.render();
-//        debugRenderer.render(world, camera.combined);
+        debugRenderer.render(world, camera.combined);
 
     }
 

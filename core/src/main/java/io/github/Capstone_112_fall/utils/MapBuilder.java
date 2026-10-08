@@ -60,7 +60,7 @@ public class MapBuilder {
                 props.putAll(tile.getProperties());
 
                 out.add(new MapEntityData(getType(props), centerX, centerY, widthMeters, heightMeters,
-                    0f, cell.getFlipHorizontally(), cell.getFlipVertically(), props));
+                    0f, cell.getFlipHorizontally(), cell.getFlipVertically(), getEntityID(props), props));
             }
         }
 
@@ -89,7 +89,7 @@ public class MapBuilder {
                 float centerY = (tileObject.getY() + height / 2f) / ppm;
 
                 out.add(new MapEntityData(getType(props), centerX, centerY, width / ppm, height / ppm,
-                    -tileObject.getRotation(), tileObject.isFlipHorizontally(), tileObject.isFlipVertically(), props));
+                    -tileObject.getRotation(), tileObject.isFlipHorizontally(), tileObject.isFlipVertically(), getEntityID(props), props));
             } else if (object instanceof RectangleMapObject) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 MapProperties props = object.getProperties();
@@ -98,7 +98,7 @@ public class MapBuilder {
                 float centerY = (rect.y + rect.height / 2f) / ppm;
 
                 out.add(new MapEntityData(getType(props), centerX, centerY, rect.width / ppm, rect.height / ppm,
-                    0f, false, false, props));
+                    0f, false, false, getEntityID(props), props));
             } else if (object instanceof PolygonMapObject) {
                 PolygonMapObject polyObject = (PolygonMapObject) object;
                 Polygon polygon = polyObject.getPolygon();
@@ -132,7 +132,7 @@ public class MapBuilder {
                 boolean flipX = props.get("flipX", false, Boolean.class);
 
                 out.add(new MapEntityData(getType(props), centerX, centerY, width, height,
-                    polygon.getRotation(), flipX, false, props));
+                    polygon.getRotation(), flipX, false, getEntityID(props), props));
             }
         }
     }
@@ -140,4 +140,5 @@ public class MapBuilder {
     private static String getType(MapProperties props) {
         return props.get("type", DEFAULT_TYPE, String.class);
     }
+    private static String getEntityID(MapProperties props) { return props.get("entityID", "", String.class); }
 }

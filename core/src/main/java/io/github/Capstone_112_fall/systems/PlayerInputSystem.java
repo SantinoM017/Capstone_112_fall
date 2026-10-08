@@ -88,7 +88,7 @@ public class PlayerInputSystem extends IteratingSystem {
 
         // --- 4. ATTACK INPUT ---
         player.attackCooldown = Math.max(0f, player.attackCooldown - deltaTime);
-        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown == 0f) {
+        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown <= 0f) {
             player.attackRequested = true;
             player.attackCooldown = 0.5f;
         }
