@@ -21,11 +21,16 @@ public class AnimationFactory {
 
         animComp.animations.put(
             StateComponent.State.IDLE,
-            createAnimation("character", 0.1f, Animation.PlayMode.LOOP)
+            createAnimation("blue_slime", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
-            StateComponent.State.WALKING,
-            createAnimation("character_walk", 0.1f, Animation.PlayMode.LOOP)
+            StateComponent.State.LONG_IDLE,
+            createAnimation("idle", 0.2f, Animation.PlayMode.LOOP)
+        );
+        animComp.animations.put(
+            StateComponent.State.WALKING, createBlueSlimeWalk()
+
+//            createAnimation("blue_slime_walk", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
             StateComponent.State.JUMPING,
@@ -33,11 +38,24 @@ public class AnimationFactory {
         );
         animComp.animations.put(
             StateComponent.State.FALLING,
-            createAnimation("character_fall", 0.1f, Animation.PlayMode.NORMAL)
+            createAnimation("character_fall", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
             StateComponent.State.ATTACKING,
             createAnimation("cross-body_sword_swing_frame", 0.1f, Animation.PlayMode.NORMAL)
+        );
+        animComp.animations.put(
+            StateComponent.State.DEAD,
+            createAnimation("character_death", 0.5f, Animation.PlayMode.NORMAL)
+        );
+        return animComp;
+    }
+
+    public AnimationComponent createStaticEntityAnimations(Engine engine) {
+        AnimationComponent animComp = engine.createComponent(AnimationComponent.class);
+        animComp.animations.put(
+            StateComponent.State.DEAD,
+            createAnimation("Tree1", 0f, Animation.PlayMode.NORMAL)
         );
         return animComp;
     }
@@ -45,5 +63,30 @@ public class AnimationFactory {
     private Animation<TextureRegion> createAnimation(String animationName, float frameDuration, Animation.PlayMode mode) {
         Array<TextureAtlas.AtlasRegion> regions = atlas.findRegions(animationName);
         return new Animation<>(frameDuration, regions, mode);
+    }
+
+    public Animation<TextureRegion> createBlueSlimeWalk() {
+        Array<TextureAtlas.AtlasRegion> regions = atlas.findRegions("blue_slime_walk");
+
+        TextureRegion open1 = regions.get(0);
+        TextureRegion open2 = regions.get(2);
+        TextureRegion open3 = regions.get(3);
+        TextureRegion open4 = regions.get(4);
+        TextureRegion closedEye = regions.get(1);
+
+        Array<TextureRegion> frameSequence = new Array<>();
+
+        // Repeat open-eye cycle 5 times
+        for (int i = 0; i < 3; i++) {
+            frameSequence.add(open1);
+            frameSequence.add(open2);
+            frameSequence.add(open3);
+            frameSequence.add(open4);
+        }
+
+        // Insert 1 blink frame at the end of the long cycle
+        frameSequence.add(closedEye);
+
+        return new Animation<>(0.12f, frameSequence, Animation.PlayMode.LOOP);
     }
 }

@@ -87,16 +87,30 @@ public class Main extends ScreenAdapter {
         entityManager.createMapSideBoundaries(mapWidth, mapHeight);
 
         // Ashley setup
+        // 1. INPUT PHASE
         engine.addSystem(new PlayerInputSystem());
-        engine.addSystem(new PhysicsSyncSystem());
-        engine.addSystem(new PhysicsContactSystem(world));
-        engine.addSystem(new SlopeFrictionSystem());
+
+        // 2. COMBAT & BEHAVIOR LOGIC PHASE
+        // Modify movement intentions, apply state changes, spawn attack hitboxes
         engine.addSystem(new PlayerStateSystem());
+        engine.addSystem(new EnemyStateSystem());
         engine.addSystem(new AttackSystem(entityManager));
+        engine.addSystem(new HealthSystem());
+        engine.addSystem(new SlopeFrictionSystem()); // Pre-step friction adjustments
+
+        // 3. PHYSICS & CONTACT PHASE
+        // PhysicsContactSystem steps Box2D and processes collisions
+        engine.addSystem(new PhysicsContactSystem(world));
+
+        // 4. POST-PHYSICS & CLEANUP PHASE
+        // Sync visual transforms to Box2D bodies, process transitions, and destroy dead entities
+        engine.addSystem(new PhysicsSyncSystem());
+        engine.addSystem(new DeathSystem(game, world));
+        engine.addSystem(new DestroyEntitySystem(world)); // MUST run after PhysicsContactSystem and HealthSystem
+
+        // 5. CAMERA & RENDERING PHASE
         engine.addSystem(cameraSystem);
         engine.addSystem(new RenderSystem(batch, camera));
-        engine.addSystem(new DeathSystem(game));
-        engine.addSystem(new HealthSystem());
 
         // Modified by Claude (Anthropic AI assistant)
         entityManager.createMapEntities(MapBuilder.parse(map, PPM)); // turns tiles and objects into entities

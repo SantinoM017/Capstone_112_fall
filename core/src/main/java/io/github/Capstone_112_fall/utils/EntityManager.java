@@ -31,9 +31,7 @@ public class EntityManager {
         Body body = createPlayer(x, y);
 
         // create and add body component
-        Box2DComponent box2dComp = engine.createComponent(Box2DComponent.class);
-        box2dComp.body = body;
-        player.add(box2dComp);
+        createBox2DComponent(player, body);
 
         // create and add transform component
         TransformComponent transformComponent = engine.createComponent(TransformComponent.class);
@@ -93,48 +91,7 @@ public class EntityManager {
 
         // PASS 2: Parse Hitboxes & Attach Box2D Bodies directly to pending Entities
         for (MapEntityData d : deferredHitboxes) {
-            if (d.entityID.isEmpty()) continue;
-
-            Entity parentEntity = pendingEntities.get(d.entityID);
-            if (parentEntity == null) continue;
-
-            // Build the Box2D Body (KinematicBody or DynamicBody for moving entities)
-            BodyDef bodyDef = new BodyDef();
-            boolean isDynamic = d.properties.get("dynamic", false, Boolean.class);
-            bodyDef.type = isDynamic ? BodyDef.BodyType.DynamicBody : BodyDef.BodyType.KinematicBody;
-            bodyDef.position.set(d.x, d.y);
-            bodyDef.fixedRotation = true;
-
-            Body body = world.createBody(bodyDef);
-
-            PolygonShape shape = new PolygonShape();
-            shape.setAsBox(d.width / 2f, d.height / 2f);
-
-            FixtureDef fixtureDef = new FixtureDef();
-            fixtureDef.shape = shape;
-            fixtureDef.isSensor = d.properties.get("sensor", true, Boolean.class);
-
-            Fixture hurtbox = body.createFixture(fixtureDef);
-            shape.dispose();
-
-            // Label fixture for ContactListener collision checks
-            String fixtureTag = d.properties.get("fixtureTag", "enemy_hurtbox", String.class);
-            hurtbox.setUserData(fixtureTag);
-
-            // --- CRITICAL TWO-WAY LINKING ---
-            // 1. Point Box2D Body back to Ashley Entity
-            body.setUserData(parentEntity);
-
-            // 2. Attach Box2DComponent to the existing Ashley Entity
-            Box2DComponent box2dComp = engine.createComponent(Box2DComponent.class);
-            box2dComp.body = body;
-            parentEntity.add(box2dComp);
-
-            // 3. Attach HitboxComponent to track fixtures on Ashley Entity
-            HitboxComponent hitboxComp = engine.createComponent(HitboxComponent.class);
-            hitboxComp.body = body;
-            hitboxComp.hurtboxFixture = hurtbox;
-            parentEntity.add(hitboxComp);
+            createEnemy(d, pendingEntities);
         }
     }
 
@@ -159,7 +116,7 @@ public class EntityManager {
 
         // Create sensor fixture offset in front of the player
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(0.16f, 0.4f, new Vector2(0.5f * direction, 0f), 0f);
+        shape.setAsBox(0.2f, 0.5f, new Vector2(0.5f * direction, 0.1f), 0f);
 
         FixtureDef fDef = new FixtureDef();
         fDef.shape = shape;
@@ -245,7 +202,7 @@ public class EntityManager {
         // --- 3. Foot Sensor (Ground / Slope Detection) ---
         // Centered at y = -0.49m (overlaps feet boundary at -0.5m)
         PolygonShape footShape = new PolygonShape();
-        footShape.setAsBox(0.15f, 0.02f, new Vector2(0, -0.49f), 0);
+        footShape.setAsBox(0.15f, 0.02f, new Vector2(0, -0.45f), 0);
 
         FixtureDef footDef = new FixtureDef();
         footDef.shape = footShape;
@@ -261,6 +218,59 @@ public class EntityManager {
         body.setMassData(massData);
 
         return body;
+    }
+
+    private void createEnemy(MapEntityData d, ObjectMap<String, Entity> pendingEntities) {
+        if (d.entityID.isEmpty()) return;
+
+        Entity parentEntity = pendingEntities.get(d.entityID);
+        if (parentEntity == null) return;
+
+        // Build the Box2D Body (KinematicBody or DynamicBody for moving entities)
+        BodyDef bodyDef = new BodyDef();
+        boolean isDynamic = d.properties.get("dynamic", false, Boolean.class);
+        bodyDef.type = isDynamic ? BodyDef.BodyType.DynamicBody : BodyDef.BodyType.KinematicBody;
+        bodyDef.position.set(d.x, d.y);
+        bodyDef.fixedRotation = true;
+
+        Body body = world.createBody(bodyDef);
+
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(d.width / 2f, d.height / 2f);
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.isSensor = d.properties.get("sensor", true, Boolean.class);
+
+        Fixture hurtbox = body.createFixture(fixtureDef);
+        shape.dispose();
+
+        // Label fixture for ContactListener collision checks
+        String fixtureTag = d.properties.get("fixtureTag", "enemy_hurtbox", String.class);
+        hurtbox.setUserData(fixtureTag);
+
+        // --- CRITICAL TWO-WAY LINKING ---
+        // 1. Point Box2D Body back to Ashley Entity
+        body.setUserData(parentEntity);
+
+        // 2. Attach Box2DComponent to the existing Ashley Entity
+        createBox2DComponent(parentEntity, body);
+
+        // 3. Attach HitboxComponent to track fixtures on Ashley Entity
+        HitboxComponent hitboxComp = engine.createComponent(HitboxComponent.class);
+        hitboxComp.body = body;
+        hitboxComp.hurtboxFixture = hurtbox;
+        parentEntity.add(hitboxComp);
+
+        createHealthComponent(parentEntity, 100, 100);
+
+        StateComponent stateComp = engine.createComponent(StateComponent.class);
+        parentEntity.add(stateComp);
+
+        EnemyComponent enemyComp = engine.createComponent(EnemyComponent.class);
+        parentEntity.add(enemyComp);
+
+        parentEntity.add(animationFactory.createStaticEntityAnimations(engine));
     }
 
     // Written by Claude (Anthropic AI assistant)
@@ -317,7 +327,7 @@ public class EntityManager {
         }
         shape.dispose();
 
-        createBox2DComponent(block);
+        createBox2DComponent(block, body);
 
         createTransformComponent(block, data.x, data.y, data.rotation);
 
@@ -407,8 +417,9 @@ public class EntityManager {
         shape.dispose();
     }
 
-    private void createBox2DComponent(Entity entity) {
+    private void createBox2DComponent(Entity entity, Body body) {
         Box2DComponent box2D = engine.createComponent(Box2DComponent.class);
+        box2D.body = body;
         entity.add(box2D);
     }
 

@@ -44,6 +44,7 @@ This project has used AI tools and agents to assist in the development of this p
     - Used to help write code and provide suggestions for code completion and refactoring.
     - Used to help explain parts of the code and to explain any questions or issues I am having with the code
     - Used to debug code
+    - Used to write repetitive parts of my code
     - Helped debug the AttackSystem and PlayerInputSystem
     - I refactored the player entity userData to refer to the entity itself instead of the grounded component. I asked the AI to refactor all uses of the grounded component as userData to use the entity itself from userData
     - Ran out of inline suggestion on 10/07/2026

@@ -63,18 +63,21 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
             footFixture = fixtureB;
         }
 
-        if (footFixture != null) {
-            Object bodyUserData = footFixture.getBody().getUserData();
-            if (bodyUserData instanceof Entity) {
-                GroundedComponent groundedComponent = groundedMapper.get((Entity) bodyUserData);
-                if (groundedComponent == null) return;
-                if (isBegin) {
-                    groundedComponent.groundContacts++;
-                } else {
-                    groundedComponent.groundContacts = Math.max(0, groundedComponent.groundContacts - 1);
-                }
-                groundedComponent.isGrounded = groundedComponent.groundContacts > 0;
+        if (footFixture == null) return;
+
+        Fixture groundFixture = footFixture == fixtureA ? fixtureB : fixtureA;
+        if (groundFixture.isSensor()) return;
+
+        Object bodyUserData = footFixture.getBody().getUserData();
+        if (bodyUserData instanceof Entity) {
+            GroundedComponent groundedComponent = groundedMapper.get((Entity) bodyUserData);
+            if (groundedComponent == null) return;
+            if (isBegin) {
+                groundedComponent.groundContacts++;
+            } else {
+                groundedComponent.groundContacts = Math.max(0, groundedComponent.groundContacts - 1);
             }
+            groundedComponent.isGrounded = groundedComponent.groundContacts > 0;
         }
     }
 
@@ -114,13 +117,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         // Dispatch logic based on sensor type string
         switch (sensorType) {
             case "spike":
-                if(isBegin) {
-                    health.takingDamageFrom = sensorEntity;
-                    health.isTakingDamage = true;
-                } else {
-                    health.isTakingDamage = false;
-                }
-
+                damageSystem(isBegin, health, sensorEntity);
         }
     }
 
@@ -140,16 +137,10 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
             return;
         }
 
-        if(isBegin) {
-            Entity enemy = (Entity) enemyHurtboxFixture.getBody().getUserData();
-            Entity player = (Entity) attackFixture.getBody().getUserData();
-            DamageComponent damageComponent = damageMapper.get(player);
-            int damage = damageComponent.damage;
-            HealthComponent healthComponent = healthMapper.get(enemy);
-            int health = healthComponent.hp;
-            health -= damage;
-            System.out.println("Enemy attacked");
-        }
+        Entity enemy = (Entity) enemyHurtboxFixture.getBody().getUserData();
+        Entity player = (Entity) attackFixture.getBody().getUserData();
+        HealthComponent healthComponent = healthMapper.get(enemy);
+        damageSystem(isBegin, healthComponent, player);
     }
 
     private boolean isPlayerFixture(Fixture fixture) {
@@ -192,9 +183,9 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
             return;
         }
 
-        // 3. Feet Position Check: Only collide if player's bottom feet (Y offset ~ -0.5m)
+        // 3. Feet Position Check: Only collide if player's bottom feet (Y offset ~ -0.45m)
         // are strictly ABOVE the platform's top surface.
-        float playerFeetY = playerBody.getPosition().y - 0.5f;
+        float playerFeetY = playerBody.getPosition().y - 0.45f;
         float platformTopY = getPlatformTopY(platformFixture);
 
         // Allow a small 0.05m tolerance buffer so the player lands smoothly without popping through
@@ -226,5 +217,15 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         // Default fallback if rectangle or box shape centered around origin
         return body.getPosition().y;
+    }
+
+    private void damageSystem(boolean isBegin, HealthComponent healthComponent, Entity takingDamageFrom) {
+        if(isBegin) {
+            healthComponent.isTakingDamage = true;
+            healthComponent.takingDamageFrom = takingDamageFrom;
+        } else {
+            healthComponent.isTakingDamage = false;
+            healthComponent.takingDamageFrom = null;
+        }
     }
 }

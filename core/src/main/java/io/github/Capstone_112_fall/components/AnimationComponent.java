@@ -8,4 +8,9 @@ import com.badlogic.gdx.utils.ObjectMap;
 // map enum state to animation name
 public class AnimationComponent implements Component {
     public ObjectMap<StateComponent.State, Animation<TextureRegion>> animations = new ObjectMap<>();
+
+    public float getAnimationDuration(StateComponent state) {
+        Animation<TextureRegion> anim = animations.get(state.currentState);
+        return anim != null ? anim.getAnimationDuration() : 0f;
+    }
 }

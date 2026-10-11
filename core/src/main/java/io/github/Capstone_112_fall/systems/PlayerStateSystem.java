@@ -30,6 +30,15 @@ public class PlayerStateSystem extends IteratingSystem {
         TextureComponent texture = textureComponent.get(entity);
         HealthComponent health = healthComponent.get(entity);
 
+
+        if(health.hp <= 0) {
+            state.setState(StateComponent.State.DEAD);
+            state.stateTime += deltaTime;
+            float velY = Math.min(box2D.body.getLinearVelocity().y, 0f);
+            box2D.body.setLinearVelocity(0,velY);
+            return;
+        }
+
         if(box2D.body == null) return;
 
         Vector2 velocity = box2D.body.getLinearVelocity();
@@ -60,15 +69,16 @@ public class PlayerStateSystem extends IteratingSystem {
             if(velocity.x != 0) {
                 state.setState(StateComponent.State.WALKING);
             } else {
-                state.setState(StateComponent.State.IDLE);
+                if(state.currentState != StateComponent.State.LONG_IDLE) state.setState(StateComponent.State.IDLE);
             }
         }
 
-        if(health.hp <= 0) {
-            state.setState(StateComponent.State.DEAD);
+        if(state.currentState == StateComponent.State.IDLE && state.stateTime > 2f) {
+            state.setState(StateComponent.State.LONG_IDLE);
         }
 
         state.stateTime += deltaTime;
+
 //        System.out.println("State: " + state.currentState);
     }
 }
