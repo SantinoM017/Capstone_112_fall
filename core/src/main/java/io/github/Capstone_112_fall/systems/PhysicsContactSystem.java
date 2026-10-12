@@ -5,21 +5,31 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import io.github.Capstone_112_fall.components.DamageComponent;
-import io.github.Capstone_112_fall.components.GroundedComponent;
-import io.github.Capstone_112_fall.components.HealthComponent;
-import io.github.Capstone_112_fall.components.PlayerComponent;
+import io.github.Capstone_112_fall.components.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // checks for all contacts
 public class PhysicsContactSystem extends EntitySystem implements ContactListener {
     private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private final ComponentMapper<GroundedComponent> groundedMapper = ComponentMapper.getFor(GroundedComponent.class);
     private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
-    private final ComponentMapper<DamageComponent> damageMapper = ComponentMapper.getFor(DamageComponent.class);
+    private final ComponentMapper<KnockbackComponent> knockMapper = ComponentMapper.getFor(KnockbackComponent.class);
+    private final ComponentMapper<Box2DComponent> box2DMapper = ComponentMapper.getFor(Box2DComponent.class);
     private final Vector2 tempVertex = new Vector2(); // Reusable vector to prevent GC allocation
+    private final List<PendingKnockback> pendingKnockbacks = new ArrayList<>();
 
     public PhysicsContactSystem(World world) {
         world.setContactListener(this);
+    }
+
+    @Override
+    public void update(float deltaTime) {
+        for (PendingKnockback pending : pendingKnockbacks) {
+            applyKnockback(pending);
+        }
+        pendingKnockbacks.clear();
     }
 
     @Override
@@ -82,15 +92,10 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
     }
 
     private void checkSensorContact(Fixture fixtureA, Fixture fixtureB, boolean isBegin) {
-        // Determine which fixture is the player and which is the sensor
-        Fixture playerFixture = null;
-        Fixture sensorFixture = null;
-
-        if (isPlayerFixture(fixtureA)) playerFixture = fixtureA;
-        if (isPlayerFixture(fixtureB)) playerFixture = fixtureB;
-
-        if (fixtureA.isSensor()) sensorFixture = fixtureA;
-        if (fixtureB.isSensor()) sensorFixture = fixtureB;
+        Fixture playerFixture = isPlayerFixture(fixtureA) ? fixtureA
+            : isPlayerFixture(fixtureB) ? fixtureB : null;
+        Fixture sensorFixture = isDamageSensor(fixtureA) ? fixtureA
+            : isDamageSensor(fixtureB) ? fixtureB : null;
 
         // Both a valid player fixture and a sensor fixture must be present
         if (playerFixture == null || sensorFixture == null) {
@@ -101,7 +106,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Object sensorBodyData = sensorFixture.getBody().getUserData();
         Object bodyUserData = playerFixture.getBody().getUserData();
 
-        if (sensorTag == null || !(bodyUserData instanceof Entity)) {
+        if (!(sensorBodyData instanceof Entity) || !(bodyUserData instanceof Entity)) {
             return;
         }
 
@@ -117,7 +122,10 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         // Dispatch logic based on sensor type string
         switch (sensorType) {
             case "spike":
+                damageSystem(isBegin, health, sensorEntity); return;
+            case "enemy_attackbox":
                 damageSystem(isBegin, health, sensorEntity);
+                knockbackSystem(isBegin, sensorEntity, playerEntity, health);
         }
     }
 
@@ -141,6 +149,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Entity player = (Entity) attackFixture.getBody().getUserData();
         HealthComponent healthComponent = healthMapper.get(enemy);
         damageSystem(isBegin, healthComponent, player);
+        knockbackSystem(isBegin, player, enemy, healthComponent);
     }
 
     private boolean isPlayerFixture(Fixture fixture) {
@@ -148,6 +157,11 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         return "player_body".equals(tag)
             || "player_foot".equals(tag)
             || "player_slope_fixture".equals(tag);
+    }
+
+    private boolean isDamageSensor(Fixture fixture) {
+        Object tag = fixture.getUserData();
+        return "spike".equals(tag) || ("enemy_attackbox".equals(tag) && fixture.isSensor());
     }
 
     private void checkOneWayPlatform(Contact contact, Fixture fixtureA, Fixture fixtureB) {
@@ -226,6 +240,54 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         } else {
             healthComponent.isTakingDamage = false;
             healthComponent.takingDamageFrom = null;
+        }
+    }
+
+    private void knockbackSystem(boolean isBegin, Entity hazard, Entity affectedTarget, HealthComponent health) {
+        if (isBegin && health != null && health.hitStunTimer <= 0) {
+            KnockbackComponent knockback = knockMapper.get(hazard);
+            Box2DComponent hazardBody = box2DMapper.get(hazard);
+            Box2DComponent affectedBody = box2DMapper.get(affectedTarget);
+            if (knockback == null || hazardBody == null || hazardBody.body == null
+                || affectedBody == null || affectedBody.body == null) return;
+
+            float direction = (affectedBody.body.getPosition().x >= hazardBody.body.getPosition().x) ? 1.0f : -1.0f;
+            pendingKnockbacks.add(new PendingKnockback(
+                affectedTarget, knockback.xVel * direction, knockback.yVel));
+        }
+    }
+
+    private void applyKnockback(PendingKnockback pending) {
+        Box2DComponent affectedBody = box2DMapper.get(pending.target);
+        if (affectedBody == null || affectedBody.body == null) return;
+
+        Body body = affectedBody.body;
+        if (body.getType() == BodyDef.BodyType.KinematicBody) {
+            affectedBody.temporarilyDynamicFromKinematic = true;
+            affectedBody.previousDynamicY = body.getPosition().y;
+            affectedBody.hasPreviousDynamicY = true;
+            body.setType(BodyDef.BodyType.DynamicBody);
+        }
+
+        body.setLinearVelocity(0, 0);
+        body.applyLinearImpulse(
+            new Vector2(pending.impulseX, pending.impulseY), body.getWorldCenter(), true);
+
+        HealthComponent health = healthMapper.get(pending.target);
+        if (health != null) {
+            health.hitStunTimer = health.hitStunDuration;
+        }
+    }
+
+    private static class PendingKnockback {
+        private final Entity target;
+        private final float impulseX;
+        private final float impulseY;
+
+        private PendingKnockback(Entity target, float impulseX, float impulseY) {
+            this.target = target;
+            this.impulseX = impulseX;
+            this.impulseY = impulseY;
         }
     }
 }

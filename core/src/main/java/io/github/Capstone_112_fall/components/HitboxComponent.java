@@ -6,6 +6,6 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 
 public class HitboxComponent implements Component {
     public Body body;
-    public Fixture mainFixture;
+    public Fixture attackboxFixture;
     public Fixture hurtboxFixture;
 }

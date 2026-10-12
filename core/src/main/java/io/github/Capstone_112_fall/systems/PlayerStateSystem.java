@@ -4,6 +4,8 @@ import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import io.github.Capstone_112_fall.components.*;
 
@@ -39,17 +41,25 @@ public class PlayerStateSystem extends IteratingSystem {
             return;
         }
 
+        if(health.hitStunTimer > 0) {
+            state.currentState = StateComponent.State.HURT;
+            state.stateTime += deltaTime;
+            return;
+        }
+
         if(box2D.body == null) return;
 
         Vector2 velocity = box2D.body.getLinearVelocity();
 
-        // flip texture based on velocity
-        if(velocity.x > 0.1f) {
-            texture.flipX = false;
-            player.isFlipped = false;
-        } else if(velocity.x < -0.1f) {
-            texture.flipX = true;
-            player.isFlipped = true;
+        // flip texture based on key input
+        if(!player.isAttacking) {
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+                texture.flipX = false;
+                player.isFlipped = false;
+            } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+                texture.flipX = true;
+                player.isFlipped = true;
+            }
         }
 
         // player movement states: jumping, falling, walking, idle

@@ -14,6 +14,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.WorldManifold;
 import io.github.Capstone_112_fall.components.Box2DComponent;
 import io.github.Capstone_112_fall.components.GroundedComponent;
+import io.github.Capstone_112_fall.components.HealthComponent;
 import io.github.Capstone_112_fall.components.PlayerComponent;
 
 // class revised by Gemini. Movement got very complicated once slopes were incorporated.
@@ -24,9 +25,10 @@ public class PlayerInputSystem extends IteratingSystem {
     private final ComponentMapper<Box2DComponent> box2DComponent = ComponentMapper.getFor(Box2DComponent.class);
     private final ComponentMapper<PlayerComponent> playerComponent = ComponentMapper.getFor(PlayerComponent.class);
     private final ComponentMapper<GroundedComponent> groundedComponent = ComponentMapper.getFor(GroundedComponent.class);
+    private final ComponentMapper<HealthComponent> healthComponent = ComponentMapper.getFor(HealthComponent.class);
 
     public PlayerInputSystem() {
-        super(Family.all(Box2DComponent.class, PlayerComponent.class, GroundedComponent.class).get());
+        super(Family.all(Box2DComponent.class, PlayerComponent.class).get());
     }
 
     @Override
@@ -34,8 +36,11 @@ public class PlayerInputSystem extends IteratingSystem {
         Box2DComponent box2D = box2DComponent.get(entity);
         PlayerComponent player = playerComponent.get(entity);
         GroundedComponent grounded = groundedComponent.get(entity);
+        HealthComponent health = healthComponent.get(entity);
 
-        if (box2D.body == null) return;
+        if(health != null && health.hitStunTimer > 0) {
+            return;
+        }
 
         float speed = 2f; // meters per second
         boolean movingLeft = Gdx.input.isKeyPressed(Input.Keys.A);

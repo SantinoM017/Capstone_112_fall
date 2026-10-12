@@ -8,7 +8,9 @@ public class HealthComponent implements Component {
     public int hp;
     public int maxHp;
     public float invulnerabilityTimer;
-    public final float invulnerabilityDuration = 0.5f;
+    public final float invulnerabilityDuration = 0.4f;
+    public float hitStunTimer;
+    public final float hitStunDuration = 0.3f;
     public boolean isTakingDamage;
     public Entity takingDamageFrom;
 
@@ -18,4 +20,5 @@ public class HealthComponent implements Component {
             invulnerabilityTimer = invulnerabilityDuration;
         }
     }
+
 }

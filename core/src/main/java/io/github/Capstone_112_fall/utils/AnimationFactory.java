@@ -21,16 +21,14 @@ public class AnimationFactory {
 
         animComp.animations.put(
             StateComponent.State.IDLE,
-            createAnimation("blue_slime", 0.1f, Animation.PlayMode.LOOP)
+            createAnimation("character", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
-            StateComponent.State.LONG_IDLE,
-            createAnimation("idle", 0.2f, Animation.PlayMode.LOOP)
+            StateComponent.State.LONG_IDLE, createPlayerLongIdle()
         );
         animComp.animations.put(
-            StateComponent.State.WALKING, createBlueSlimeWalk()
-
-//            createAnimation("blue_slime_walk", 0.1f, Animation.PlayMode.LOOP)
+            StateComponent.State.WALKING,
+            createAnimation("character_walk", 0.1f, Animation.PlayMode.LOOP)
         );
         animComp.animations.put(
             StateComponent.State.JUMPING,
@@ -45,17 +43,20 @@ public class AnimationFactory {
             createAnimation("cross-body_sword_swing_frame", 0.1f, Animation.PlayMode.NORMAL)
         );
         animComp.animations.put(
+            StateComponent.State.HURT,
+            createAnimation("character_hurt", 0.075f, Animation.PlayMode.NORMAL)
+        );
+        animComp.animations.put(
             StateComponent.State.DEAD,
             createAnimation("character_death", 0.5f, Animation.PlayMode.NORMAL)
         );
         return animComp;
     }
 
-    public AnimationComponent createStaticEntityAnimations(Engine engine) {
+    public AnimationComponent createEnemyAnimations(Engine engine) {
         AnimationComponent animComp = engine.createComponent(AnimationComponent.class);
         animComp.animations.put(
-            StateComponent.State.DEAD,
-            createAnimation("Tree1", 0f, Animation.PlayMode.NORMAL)
+            StateComponent.State.WALKING, createBlueSlimeWalk()
         );
         return animComp;
     }
@@ -77,16 +78,45 @@ public class AnimationFactory {
         Array<TextureRegion> frameSequence = new Array<>();
 
         // Repeat open-eye cycle 5 times
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             frameSequence.add(open1);
-            frameSequence.add(open2);
+            if(i == 4) {
+                frameSequence.add(closedEye);
+            } else {
+                frameSequence.add(open2);
+            }
             frameSequence.add(open3);
             frameSequence.add(open4);
         }
 
-        // Insert 1 blink frame at the end of the long cycle
-        frameSequence.add(closedEye);
 
-        return new Animation<>(0.12f, frameSequence, Animation.PlayMode.LOOP);
+        return new Animation<>(0.15f, frameSequence, Animation.PlayMode.LOOP);
+    }
+
+    public Animation<TextureRegion> createPlayerLongIdle() {
+        Array<TextureAtlas.AtlasRegion> regions = atlas.findRegions("idle");
+
+        TextureRegion open1 = regions.get(0);
+        TextureRegion open2 = regions.get(1);
+        TextureRegion open3 = regions.get(2);
+        TextureRegion open4 = regions.get(3);
+        TextureRegion closedEye = regions.get(4);
+
+        Array<TextureRegion> frameSequence = new Array<>();
+
+        // Repeat open-eye cycle 5 times
+        for (int i = 0; i < 5; i++) {
+            frameSequence.add(open1);
+            if(i == 4) {
+                frameSequence.add(closedEye);
+            } else {
+                frameSequence.add(open2);
+            }
+            frameSequence.add(open3);
+            frameSequence.add(open4);
+        }
+
+
+        return new Animation<>(0.15f, frameSequence, Animation.PlayMode.LOOP);
     }
 }

@@ -8,12 +8,15 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
+import io.github.Capstone_112_fall.ai_behaviors.SlimeBehavior;
 import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.Main;
 
 
 // creates entities and adds components to them
 public class EntityManager {
+    private static final float PLAYER_MASS = 1.0f;
+
     private final Engine engine;
     private final AnimationFactory animationFactory;
     private final World world;
@@ -70,15 +73,18 @@ public class EntityManager {
     public void createMapEntities(Array<MapEntityData> data) {
         // Stores created visual Ashley Entities keyed by entityID
         ObjectMap<String, Entity> pendingEntities = new ObjectMap<>();
-        Array<MapEntityData> deferredHitboxes = new Array<>();
+        ObjectMap<String, MapEntityData> hurtboxDataMap = new ObjectMap<>();
+        ObjectMap<String, MapEntityData> attackboxDataMap = new ObjectMap<>();
 
         // PASS 1: Instantiate visual/logical entities (No Box2D bodies yet)
         for (MapEntityData d : data) {
             String property = d.properties.get("property", "", String.class);
 
-            if ("entity_hitbox".equals(property)) {
+            if ("entity_hurtbox".equals(property)) {
                 // Defer hitboxes until all parent entities are created
-                deferredHitboxes.add(d);
+                hurtboxDataMap.put(d.entityID, d);
+            } else if ("entity_attackbox".equals(property)){
+                attackboxDataMap.put(d.entityID, d);
             } else if (!d.entityID.isEmpty() && "entity".equals(property)) {
                 // Create visual Ashley entity and register in map
                 Entity entity = createMapEntity(d);
@@ -90,8 +96,13 @@ public class EntityManager {
         }
 
         // PASS 2: Parse Hitboxes & Attach Box2D Bodies directly to pending Entities
-        for (MapEntityData d : deferredHitboxes) {
-            createEnemy(d, pendingEntities);
+        for (ObjectMap.Entry<String, Entity> entry : pendingEntities) {
+            String entityID = entry.key;
+            Entity parentEntity = entry.value;
+            MapEntityData hurtboxData = hurtboxDataMap.get(entityID);
+            MapEntityData attackboxData = attackboxDataMap.get(entityID);
+
+            createEnemy(parentEntity, hurtboxData, attackboxData);
         }
     }
 
@@ -125,6 +136,7 @@ public class EntityManager {
         Fixture attackFixture = box2D.body.createFixture(fDef);
         attackFixture.setUserData("player_attack_hitbox");
         shape.dispose();
+        restorePlayerMass(box2D.body);
 
         // Attach tracking component to the entity to manage lifespan
         AttackHitboxComponent attackComp = engine.createComponent(AttackHitboxComponent.class);
@@ -133,6 +145,8 @@ public class EntityManager {
         attackComp.timer = 0f;
 
         createDamageComponent(player,20);
+
+        createKnockbackComponent(player, 1, 1);
 
         player.add(attackComp);
         box2D.body.setAwake(true);
@@ -150,6 +164,7 @@ public class EntityManager {
                 // Safely destroy the sensor fixture attached to the body
                 box2D.body.destroyFixture(attackComp.sensorFixture);
                 attackComp.sensorFixture = null;
+                restorePlayerMass(box2D.body);
             }
 
             // Clean up components from the Ashley ECS entity
@@ -214,63 +229,101 @@ public class EntityManager {
 
         // --- 4. Enforce Exact 1.0kg Mass ---
         MassData massData = body.getMassData();
-        massData.mass = 1.0f;
+        massData.mass = PLAYER_MASS;
         body.setMassData(massData);
 
         return body;
     }
 
-    private void createEnemy(MapEntityData d, ObjectMap<String, Entity> pendingEntities) {
-        if (d.entityID.isEmpty()) return;
+    private void restorePlayerMass(Body body) {
+        MassData massData = body.getMassData();
+        massData.mass = PLAYER_MASS;
+        body.setMassData(massData);
+    }
 
-        Entity parentEntity = pendingEntities.get(d.entityID);
-        if (parentEntity == null) return;
-
-        // Build the Box2D Body (KinematicBody or DynamicBody for moving entities)
+    // rewritten by Gemini
+    private void createEnemy(Entity parentEntity, MapEntityData hurtboxData, MapEntityData attackboxData) {
+        // 1. Build Body centered on Hurtbox position
         BodyDef bodyDef = new BodyDef();
-        boolean isDynamic = d.properties.get("dynamic", false, Boolean.class);
-        bodyDef.type = isDynamic ? BodyDef.BodyType.DynamicBody : BodyDef.BodyType.KinematicBody;
-        bodyDef.position.set(d.x, d.y);
+        bodyDef.type = BodyDef.BodyType.KinematicBody;
+        bodyDef.position.set(hurtboxData.x, hurtboxData.y);
         bodyDef.fixedRotation = true;
 
         Body body = world.createBody(bodyDef);
 
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox(d.width / 2f, d.height / 2f);
+        // 2. Create Hurtbox Fixture
+        PolygonShape hurtboxShape = new PolygonShape();
+        hurtboxShape.setAsBox(hurtboxData.width / 2f, hurtboxData.height / 2f);
 
-        FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.shape = shape;
-        fixtureDef.isSensor = d.properties.get("sensor", true, Boolean.class);
+        FixtureDef hurtboxDef = new FixtureDef();
+        hurtboxDef.shape = hurtboxShape;
+        hurtboxDef.isSensor = true;
 
-        Fixture hurtbox = body.createFixture(fixtureDef);
-        shape.dispose();
+        Fixture hurtbox = body.createFixture(hurtboxDef);
+        hurtboxShape.dispose();
 
-        // Label fixture for ContactListener collision checks
-        String fixtureTag = d.properties.get("fixtureTag", "enemy_hurtbox", String.class);
-        hurtbox.setUserData(fixtureTag);
+        String hurtboxTag = hurtboxData.properties.get("fixtureTag", "enemy_hurtbox", String.class);
+        hurtbox.setUserData(hurtboxTag);
 
-        // --- CRITICAL TWO-WAY LINKING ---
-        // 1. Point Box2D Body back to Ashley Entity
+        // 3. Create Attackbox Fixture (if provided in Tiled map)
+        Fixture attackFixture = null;
+        if (attackboxData != null) {
+            PolygonShape attackShape = new PolygonShape();
+
+            // Calculate offset relative to parent Body position (hurtbox center)
+            float offsetX = attackboxData.x - hurtboxData.x;
+            float offsetY = attackboxData.y - hurtboxData.y;
+
+            attackShape.setAsBox(
+                attackboxData.width / 2f,
+                attackboxData.height / 2f,
+                new Vector2(offsetX, offsetY),
+                0f);
+
+            FixtureDef attackDef = new FixtureDef();
+            attackDef.shape = attackShape;
+            attackDef.isSensor = true; // Always sensor for attack checks
+
+            attackFixture = body.createFixture(attackDef);
+            attackShape.dispose();
+
+            String attackTag = attackboxData.properties.get("fixtureTag", "enemy_attackbox", String.class);
+            attackFixture.setUserData(attackTag);
+        }
+
+        // 4. Component Assignments & Two-Way Linking
         body.setUserData(parentEntity);
 
-        // 2. Attach Box2DComponent to the existing Ashley Entity
         createBox2DComponent(parentEntity, body);
 
-        // 3. Attach HitboxComponent to track fixtures on Ashley Entity
         HitboxComponent hitboxComp = engine.createComponent(HitboxComponent.class);
         hitboxComp.body = body;
         hitboxComp.hurtboxFixture = hurtbox;
+        hitboxComp.attackboxFixture = attackFixture;
         parentEntity.add(hitboxComp);
 
-        createHealthComponent(parentEntity, 100, 100);
+        int health = hurtboxData.properties.get("hp", 1, Integer.class);
+        createHealthComponent(parentEntity, health, health);
+
+        // Attach DamageComponent if the attackbox has damage properties defined
+        if (attackboxData != null) {
+            int damage = attackboxData.properties.get("damage", 10, Integer.class);
+            createDamageComponent(parentEntity, damage);
+            float xVel = attackboxData.properties.get("xKnock", 0f, Float.class);
+            float yVel = attackboxData.properties.get("yKnock", 0f, Float.class);
+            createKnockbackComponent(parentEntity, xVel, yVel);
+        }
 
         StateComponent stateComp = engine.createComponent(StateComponent.class);
         parentEntity.add(stateComp);
 
         EnemyComponent enemyComp = engine.createComponent(EnemyComponent.class);
+        float detectionRange = hurtboxData.properties.get("detectionRange", 0f, Float.class);
+        enemyComp.behavior = new SlimeBehavior();
+        enemyComp.detectionRange = detectionRange;
         parentEntity.add(enemyComp);
 
-        parentEntity.add(animationFactory.createStaticEntityAnimations(engine));
+        parentEntity.add(animationFactory.createEnemyAnimations(engine));
     }
 
     // Written by Claude (Anthropic AI assistant)
@@ -278,7 +331,10 @@ public class EntityManager {
         TextureRegion region = atlas.findRegion(d.type);
 
         if (d.properties.get("decoration", false, Boolean.class)) {
-            return createDecorationBlock(d, region);
+            return createDecorationBlock(d, region, 0);
+        }
+        if (d.properties.get("noHitbox", false, Boolean.class)) {
+            return createDecorationBlock(d, region, 9);
         }
         if (d.properties.get("slope", false, Boolean.class)) {
             return createSlopeBlock(d, region, false);
@@ -340,12 +396,12 @@ public class EntityManager {
         return block;
     }
 
-    private Entity createDecorationBlock(MapEntityData data, TextureRegion region) {
+    private Entity createDecorationBlock(MapEntityData data, TextureRegion region, int z) {
         Entity block = engine.createEntity();
 
         createTransformComponent(block, data.x, data.y, data.rotation);
 
-        createTextureComponent(block, region, 0, data.flipX, data.flipY, data.width, region.getRegionWidth());
+        createTextureComponent(block, region, z, data.flipX, data.flipY, data.width, region.getRegionWidth());
 
         engine.addEntity(block);
         return block;
@@ -445,6 +501,13 @@ public class EntityManager {
         DamageComponent damageComponent = engine.createComponent(DamageComponent.class);
         damageComponent.damage = damage;
         entity.add(damageComponent);
+    }
+
+    private void createKnockbackComponent(Entity entity, float x, float y) {
+        KnockbackComponent knockbackComponent = engine.createComponent(KnockbackComponent.class);
+        knockbackComponent.xVel = x;
+        knockbackComponent.yVel = y;
+        entity.add(knockbackComponent);
     }
 
     private void createHealthComponent(Entity entity, int max, int hp){

@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.math.Vector2;
 import io.github.Capstone_112_fall.components.*;
 
 public class HealthSystem extends IteratingSystem {
@@ -26,6 +27,9 @@ public class HealthSystem extends IteratingSystem {
         if(health.invulnerabilityTimer >= 0){
             health.invulnerabilityTimer-=deltaTime;
         }
+        if(health.hitStunTimer > 0){
+            health.hitStunTimer-=deltaTime;
+        }
 
         if(box2D.body != null && box2D.body.getPosition().y < -10f) {
             health.hp -= 1;
@@ -45,7 +49,7 @@ public class HealthSystem extends IteratingSystem {
             AnimationComponent anim = animComp.get(entity);
             StateComponent state = stateComp.get(entity);
             state.currentState = StateComponent.State.DEAD;
-            if (anim != null && state != null) {
+            if (anim != null) {
                 float animationDuration = anim.getAnimationDuration(state);
                 if (animationDuration >= 0f) {
                     newQd.destructionTimer = animationDuration;

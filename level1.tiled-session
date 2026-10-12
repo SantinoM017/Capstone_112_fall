@@ -1,5 +1,5 @@
 {
-    "activeFile": "assets/levels/Tree 48x64.tsx",
+    "activeFile": "assets/levels/level1.tmx",
     "expandedProjectPaths": [
         ".idea",
         ".",
@@ -23,6 +23,10 @@
         "assets/levels/32x16 tiles.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 5.5
+        },
+        "assets/levels/32x32.tsx": {
+            "scaleInDock": 4,
+            "scaleInEditor": 1
         },
         "assets/levels/8. Samurai Village & Wooden Structures.tsx": {
             "scaleInDock": 1,
@@ -80,11 +84,11 @@
             "expandedObjectLayers": [
                 2
             ],
-            "scale": 5.5,
-            "selectedLayer": 0,
+            "scale": 2,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 465.3636363636364,
-                "y": 93
+                "x": 954.75,
+                "y": -60.25
             }
         },
         "assets/levels/pipe.tsx": {
@@ -100,7 +104,7 @@
             "scaleInEditor": 1
         }
     },
-    "last.imagePath": "C:/Users/San20/Downloads/Capstone_112_fall/assets/raw_images",
+    "last.imagePath": "C:/Users/San20/Downloads/Capstone_112_fall/assets/raw_images/blue_slime",
     "map.height": 15,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
@@ -118,22 +122,22 @@
     "project": "level1.tiled-project",
     "property.type": "float",
     "recentFiles": [
-        "assets/levels/level1.tmx",
-        "assets/levels/Building1.tsx",
-        "assets/levels/Building2.tsx",
-        "assets/levels/Building3.tsx",
+        "assets/levels/32x32.tsx",
         "assets/levels/32x16 tiles.tsx",
         "assets/levels/16x16 tiles.tsx",
         "assets/levels/Tree 48x64.tsx",
+        "assets/levels/Building3.tsx",
+        "assets/levels/Building2.tsx",
+        "assets/levels/Building1.tsx",
+        "assets/levels/level1.tmx",
         "assets/levels/16x16 Tiles.tsx",
         "assets/levels/AssetSheet_Pink.tsx",
         "assets/levels/blocks2.tsx",
-        "assets/levels/8. Samurai Village & Wooden Structures.tsx",
-        "assets/levels/1. Sakura Ground & Path Tiles.tsx"
+        "assets/levels/8. Samurai Village & Wooden Structures.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
         "height": 16,
-        "width": 32
+        "width": 16
     }
 }

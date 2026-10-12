@@ -2,8 +2,6 @@ package io.github.Capstone_112_fall;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -19,7 +17,6 @@ import com.badlogic.gdx.utils.SerializationException;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import io.github.Capstone_112_fall.Screens.MainScreen;
-import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.systems.*;
 import io.github.Capstone_112_fall.utils.AnimationFactory;
 import io.github.Capstone_112_fall.utils.EntityManager;
@@ -93,6 +90,7 @@ public class Main extends ScreenAdapter {
         // 2. COMBAT & BEHAVIOR LOGIC PHASE
         // Modify movement intentions, apply state changes, spawn attack hitboxes
         engine.addSystem(new PlayerStateSystem());
+        engine.addSystem(new EnemyAISystem(world));
         engine.addSystem(new EnemyStateSystem());
         engine.addSystem(new AttackSystem(entityManager));
         engine.addSystem(new HealthSystem());
@@ -120,7 +118,7 @@ public class Main extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(1f, 1f, 1f, 1f); // refresh the screen
+        ScreenUtils.clear(1f, 1f, 0.7f, 1f); // refresh the screen
         world.step(1/60f, 6, 2); // advance the physics simulation
         engine.update(delta); // runs the engine
         camera.update(); // update the camera

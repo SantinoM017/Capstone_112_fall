@@ -13,7 +13,6 @@ import io.github.Capstone_112_fall.components.QueueForDestructionComponent;
 public class DestroyEntitySystem extends IteratingSystem {
     private final ComponentMapper<QueueForDestructionComponent> qdMapper = ComponentMapper.getFor(QueueForDestructionComponent.class);
     private final ComponentMapper<Box2DComponent> box2dMapper = ComponentMapper.getFor(Box2DComponent.class);
-    private final ComponentMapper<AnimationComponent> animComp = ComponentMapper.getFor(AnimationComponent.class);
     private final World world;
     public DestroyEntitySystem(World world) {
         super(Family.all(QueueForDestructionComponent.class, EnemyComponent.class).get());
@@ -23,7 +22,6 @@ public class DestroyEntitySystem extends IteratingSystem {
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         QueueForDestructionComponent qd = qdMapper.get(entity);
-        AnimationComponent anim = animComp.get(entity);
 
         if(qd.destructionTimer > 0) {
             qd.destructionTimer-=deltaTime;
