@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="100" height="10" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="109">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="100" height="10" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="116">
  <tileset firstgid="1" source="16x16 tiles.tsx"/>
  <tileset firstgid="53" source="Building1.tsx"/>
  <tileset firstgid="55" source="Building2.tsx"/>
@@ -75,6 +75,18 @@
     <property name="noHitbox" type="bool" value="true"/>
    </properties>
   </object>
+  <object id="111" gid="2147483699" x="704" y="144" width="16" height="16">
+   <properties>
+    <property name="entityID" value="slime_2"/>
+    <property name="noHitbox" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="114" gid="2147483699" x="976" y="144" width="80" height="80">
+   <properties>
+    <property name="entityID" value="slime_3"/>
+    <property name="noHitbox" type="bool" value="true"/>
+   </properties>
+  </object>
  </objectgroup>
  <layer id="1" name="Tile Layer 1" width="100" height="10">
   <data encoding="csv">
@@ -85,9 +97,9 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,5,6,0,0,0,0,0,0,0,0,0,30,31,31,0,0,0,0,36,0,0,36,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,34,34,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,47,0,2,2,2,2,2,0,1,1,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,1,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,32,32,32,32,32,32,32,32,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,34,34,0,0,0,0,0,0,0,0,47,0,0,0,47,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,47,0,2,2,2,2,2,0,1,1,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,1,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,32,32,32,32,32,32,32,32,35,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,34,34,0,0,0,0,0,0,0,0,47,0,0,0,47,0,34,34,34,34,34,34,34,34,34,35,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
  <objectgroup id="5" name="Hitboxes">
@@ -145,6 +157,7 @@
     <property name="entityID" value="bush1"/>
     <property name="hp" type="int" value="40"/>
     <property name="property" value="entity_hurtbox"/>
+    <property name="static" type="bool" value="true"/>
    </properties>
   </object>
   <object id="107" x="628" y="132" width="8" height="8">
@@ -160,8 +173,53 @@
    <properties>
     <property name="detectionRange" type="float" value="3"/>
     <property name="entityID" value="slime_1"/>
+    <property name="entityType" value="slime"/>
     <property name="hp" type="int" value="200"/>
     <property name="property" value="entity_hurtbox"/>
+   </properties>
+  </object>
+  <object id="109" x="708" y="132" width="8" height="8">
+   <properties>
+    <property name="damage" type="int" value="5"/>
+    <property name="entityID" value="slime_2"/>
+    <property name="property" value="entity_attackbox"/>
+    <property name="xKnock" type="float" value="1"/>
+    <property name="yKnock" type="float" value="1"/>
+   </properties>
+  </object>
+  <object id="110" x="704" y="128" width="16" height="16">
+   <properties>
+    <property name="detectionRange" type="float" value="0"/>
+    <property name="entityID" value="slime_2"/>
+    <property name="entityType" value="slime"/>
+    <property name="hp" type="int" value="200"/>
+    <property name="property" value="entity_hurtbox"/>
+   </properties>
+  </object>
+  <object id="112" x="996" y="88" width="40" height="54">
+   <properties>
+    <property name="damage" type="int" value="20"/>
+    <property name="entityID" value="slime_3"/>
+    <property name="property" value="entity_attackbox"/>
+    <property name="xKnock" type="float" value="1"/>
+    <property name="yKnock" type="float" value="1"/>
+   </properties>
+  </object>
+  <object id="113" x="992" y="84" width="48" height="60">
+   <properties>
+    <property name="chaseSpeed" type="float" value="1.5"/>
+    <property name="detectionRange" type="float" value="8"/>
+    <property name="entityID" value="slime_3"/>
+    <property name="entityType" value="slime_custom"/>
+    <property name="hp" type="int" value="400"/>
+    <property name="kbRes" type="float" value="0.5"/>
+    <property name="property" value="entity_hurtbox"/>
+   </properties>
+  </object>
+  <object id="115" x="604" y="48" width="4" height="96">
+   <properties>
+    <property name="property" value="entityBarrier"/>
+    <property name="sensor" type="bool" value="true"/>
    </properties>
   </object>
  </objectgroup>

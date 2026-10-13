@@ -1,20 +1,20 @@
 package io.github.Capstone_112_fall.ai_behaviors;
 
-import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.ashley.core.Family;
-import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.World;
-import io.github.Capstone_112_fall.ai_behaviors.EnemyBehavior;
 import io.github.Capstone_112_fall.components.*;
+import io.github.Capstone_112_fall.utils.EnemyBodyBounds;
 
 public class SlimeBehavior implements EnemyBehavior {
     private final float moveSpeed;
     private final float chaseSpeed;
     private final float edgeProbeOffset;
+    private final Vector2 halfExtents = new Vector2();
+    private final Vector2 tempVertex = new Vector2();
 
     public SlimeBehavior(float moveSpeed, float chaseSpeed, float edgeProbeOffset) {
         this.moveSpeed = moveSpeed;
@@ -23,21 +23,27 @@ public class SlimeBehavior implements EnemyBehavior {
     }
 
     public SlimeBehavior() {
-        this(0.8f, 1f, 0.35f); // Default values
+        this(0.8f, 1f, 0.1f); // Default values
     }
 
     @Override
     public void execute(Entity entity, Entity player, EnemyComponent enemy, Box2DComponent box2d, World world, float deltaTime) {
         Body body = box2d.body;
+        EnemyBodyBounds.getHalfExtents(body, halfExtents, tempVertex);
+        float probeOffset = Math.max(edgeProbeOffset, halfExtents.x + 0.05f);
 
         // 1. Edge Detection: Turn around if approaching a drop-off
-        boolean groundAhead = checkGroundAhead(world, body, enemy.facingRight, edgeProbeOffset);
-        if (!groundAhead) {
+        boolean groundAhead = checkGroundAhead(world, body, enemy.facingRight, probeOffset, halfExtents.y);
+        boolean wallAhead = checkWallAhead(world, body, enemy.facingRight, probeOffset, halfExtents.y);
+        if ((!groundAhead || wallAhead) && enemy.aiState != EnemyComponent.AIState.CHASE) {
             enemy.facingRight = !enemy.facingRight;
         }
 
         // 2. Determine Speed based on State
-        float speed = (enemy.aiState == EnemyComponent.AIState.CHASE) ? chaseSpeed : moveSpeed;
+        float speed = 0f;
+        if(!wallAhead) {
+            speed = (enemy.aiState == EnemyComponent.AIState.CHASE) ? chaseSpeed : moveSpeed;
+        }
         float dir = enemy.facingRight ? 1.0f : -1.0f;
 
         // 3. Apply Horizontal Velocity (preserving current Y for gravity)
@@ -57,25 +63,21 @@ public class SlimeBehavior implements EnemyBehavior {
             if (playerHealth != null && playerHealth.hitStunTimer > 0) {
                 float awayDir = enemy.facingRight ? -1.0f : 1.0f;
                 body.setLinearVelocity(awayDir * (moveSpeed * 0.5f), body.getLinearVelocity().y);
-                return;
             }
         }
     }
 
-    private boolean checkGroundAhead(World world, Body body, boolean facingRight, float offset) {
+    private boolean checkGroundAhead(
+        World world, Body body, boolean facingRight, float offset, float halfHeight) {
         Vector2 pos = body.getPosition();
         float probeX = pos.x + (facingRight ? offset : -offset);
         float startY = pos.y;
-        float endY = pos.y - 0.6f;
+        float endY = pos.y - halfHeight - 0.15f;
 
         final boolean[] hitGround = {false};
 
         world.rayCast((Fixture fixture, Vector2 point, Vector2 normal, float fraction) -> {
-            if (fixture.isSensor()) return 1;
-
-            Object userData = fixture.getUserData();
-            if ("ground".equals(userData) || "static_block".equals(userData)
-                || "slope".equals(userData) || "one_way_platform".equals(userData)) {
+            if (isGround(fixture)) {
                 hitGround[0] = true;
                 return 0; // Terminate raycast early on first ground hit
             }
@@ -83,6 +85,50 @@ public class SlimeBehavior implements EnemyBehavior {
         }, probeX, startY, probeX, endY);
 
         return hitGround[0];
+    }
+
+    private boolean checkWallAhead(
+        World world, Body body, boolean facingRight, float offset, float halfHeight) {
+        Vector2 pos = body.getPosition();
+
+        // Start raycast from body center
+        float startX = pos.x;
+        float endX = pos.x + (facingRight ? offset : -offset);
+        final boolean[] hitWall = {false};
+
+        float verticalInset = Math.min(0.05f, halfHeight * 0.5f);
+        float bottomY = pos.y - halfHeight + verticalInset;
+        float topY = pos.y + halfHeight - verticalInset;
+        int intervals = Math.max(1, (int) Math.ceil((topY - bottomY) / 0.2f));
+        for (int i = 0; i <= intervals; i++) {
+            float sampleY = bottomY + (topY - bottomY) * i / intervals;
+            world.rayCast((Fixture fixture, Vector2 point, Vector2 normal, float fraction) -> {
+                if (!isWall(fixture, body)) return 1;
+                hitWall[0] = true;
+                return 0;
+            }, startX, sampleY, endX, sampleY);
+            if (hitWall[0]) break;
+        }
+
+        return hitWall[0];
+    }
+
+    private boolean isGround(Fixture fixture) {
+        Object userData = fixture.getUserData();
+        return !fixture.isSensor()
+            && fixture.getBody().getType() == BodyDef.BodyType.StaticBody
+            && ("ground".equals(userData)
+                || "static_block".equals(userData)
+                || "slope".equals(userData)
+                || "one_way_platform".equals(userData));
+    }
+
+    private boolean isWall(Fixture fixture, Body body) {
+        Object userData = fixture.getUserData();
+        return fixture.getBody() != body
+            && ((!fixture.isSensor()
+                    && fixture.getBody().getType() == BodyDef.BodyType.StaticBody)
+                || "entity_barrier".equals(userData));
     }
 
 }

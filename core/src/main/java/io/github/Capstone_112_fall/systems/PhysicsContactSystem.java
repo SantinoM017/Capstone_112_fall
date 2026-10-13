@@ -253,7 +253,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
             float direction = (affectedBody.body.getPosition().x >= hazardBody.body.getPosition().x) ? 1.0f : -1.0f;
             pendingKnockbacks.add(new PendingKnockback(
-                affectedTarget, knockback.xVel * direction, knockback.yVel));
+                affectedTarget, knockback.xVel * direction * health.knockbackResistance, knockback.yVel * health.knockbackResistance));
         }
     }
 
@@ -264,6 +264,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Body body = affectedBody.body;
         if (body.getType() == BodyDef.BodyType.KinematicBody) {
             affectedBody.temporarilyDynamicFromKinematic = true;
+            affectedBody.previousDynamicX = body.getPosition().x;
             affectedBody.previousDynamicY = body.getPosition().y;
             affectedBody.hasPreviousDynamicY = true;
             body.setType(BodyDef.BodyType.DynamicBody);

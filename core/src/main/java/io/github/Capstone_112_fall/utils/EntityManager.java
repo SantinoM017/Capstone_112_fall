@@ -12,6 +12,8 @@ import io.github.Capstone_112_fall.ai_behaviors.SlimeBehavior;
 import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.Main;
 
+import java.util.Properties;
+
 
 // creates entities and adds components to them
 public class EntityManager {
@@ -60,7 +62,7 @@ public class EntityManager {
         player.add(animationFactory.createPlayerAnimations(engine));
 
 
-        createHealthComponent(player, 100, 100);
+        createHealthComponent(player, 100, 100, 1);
 
         body.setUserData(player);
         engine.addEntity(player);
@@ -146,7 +148,7 @@ public class EntityManager {
 
         createDamageComponent(player,20);
 
-        createKnockbackComponent(player, 1, 1);
+        createKnockbackComponent(player, 3, 1);
 
         player.add(attackComp);
         box2D.body.setAwake(true);
@@ -245,7 +247,8 @@ public class EntityManager {
     private void createEnemy(Entity parentEntity, MapEntityData hurtboxData, MapEntityData attackboxData) {
         // 1. Build Body centered on Hurtbox position
         BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.KinematicBody;
+        boolean isStatic = hurtboxData.properties.get("static", false, Boolean.class);
+        bodyDef.type = isStatic ? BodyDef.BodyType.StaticBody : BodyDef.BodyType.KinematicBody;
         bodyDef.position.set(hurtboxData.x, hurtboxData.y);
         bodyDef.fixedRotation = true;
 
@@ -303,7 +306,8 @@ public class EntityManager {
         parentEntity.add(hitboxComp);
 
         int health = hurtboxData.properties.get("hp", 1, Integer.class);
-        createHealthComponent(parentEntity, health, health);
+        float kbRes = hurtboxData.properties.get("kbRes", 1f, Float.class);
+        createHealthComponent(parentEntity, health, health, kbRes);
 
         // Attach DamageComponent if the attackbox has damage properties defined
         if (attackboxData != null) {
@@ -318,8 +322,17 @@ public class EntityManager {
         parentEntity.add(stateComp);
 
         EnemyComponent enemyComp = engine.createComponent(EnemyComponent.class);
+        String entityType = hurtboxData.properties.get("entityType", "", String.class);
         float detectionRange = hurtboxData.properties.get("detectionRange", 0f, Float.class);
-        enemyComp.behavior = new SlimeBehavior();
+        switch(entityType) {
+            case "slime": enemyComp.behavior = new SlimeBehavior(); break;
+            case "slime_custom":
+                float walkSpeed = hurtboxData.properties.get("walkSpeed", 0.8f, float.class);
+                float chaseSpeed = hurtboxData.properties.get("chaseSpeed", 1.0f, float.class);
+                float offset = hurtboxData.properties.get("offset", 0.1f, float.class);
+                enemyComp.behavior = new SlimeBehavior(walkSpeed, chaseSpeed, offset);
+            default: break;
+        }
         enemyComp.detectionRange = detectionRange;
         parentEntity.add(enemyComp);
 
@@ -376,9 +389,8 @@ public class EntityManager {
             case "spike": fixture.setUserData("spike");
                 int damage = data.properties.get("damage", 0, Integer.class);
                 createDamageComponent(block, damage); break;
-            case "entity": fixture.setUserData("entity");
-                int health = data.properties.get("health", 0, Integer.class);
-                createHealthComponent(block, health, health);
+            case "entity": fixture.setUserData("entity"); break;
+            case "entityBarrier": fixture.setUserData("entity_barrier"); break;
             default: fixture.setUserData("static_block"); break;
         }
         shape.dispose();
@@ -510,11 +522,13 @@ public class EntityManager {
         entity.add(knockbackComponent);
     }
 
-    private void createHealthComponent(Entity entity, int max, int hp){
+    private void createHealthComponent(Entity entity, int max, int hp, float kbRes){
         HealthComponent health = engine.createComponent(HealthComponent.class);
         health.maxHp = max;
         health.hp = hp;
+        health.knockbackResistance = kbRes;
         entity.add(health);
     }
+
 
 }

@@ -12,4 +12,6 @@ public class PlayerComponent implements Component {
     public boolean isMoving;
     public boolean isDroppingThrough;
     public float dropThroughTimer;
+    public boolean isDodging;
+    public float dodgeCooldown;
 }

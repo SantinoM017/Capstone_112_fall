@@ -47,6 +47,10 @@ public class AnimationFactory {
             createAnimation("character_hurt", 0.075f, Animation.PlayMode.NORMAL)
         );
         animComp.animations.put(
+            StateComponent.State.DODGING,
+            createAnimation("character_dodge", 0.1f, Animation.PlayMode.NORMAL)
+        );
+        animComp.animations.put(
             StateComponent.State.DEAD,
             createAnimation("character_death", 0.5f, Animation.PlayMode.NORMAL)
         );

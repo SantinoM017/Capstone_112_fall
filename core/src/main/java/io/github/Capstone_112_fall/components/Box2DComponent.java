@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 public class Box2DComponent implements Component {
     public Body body;
     public boolean temporarilyDynamicFromKinematic;
+    public float previousDynamicX;
     public float previousDynamicY;
     public boolean hasPreviousDynamicY;
 }

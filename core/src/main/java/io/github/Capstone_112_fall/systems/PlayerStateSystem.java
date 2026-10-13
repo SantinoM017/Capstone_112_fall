@@ -63,7 +63,15 @@ public class PlayerStateSystem extends IteratingSystem {
         }
 
         // player movement states: jumping, falling, walking, idle
-        if(player.attackRequested) {
+        if(player.isDodging){
+            if(state.currentState != StateComponent.State.DODGING) {
+                state.setState(StateComponent.State.DODGING);
+                state.stateTime = 0f;
+            }
+            if (state.stateTime >= 0.6f) {
+                player.isDodging = false;
+            }
+        } else if(player.attackRequested) {
             if(state.currentState != StateComponent.State.ATTACKING) {
                 player.isAttacking = true;
                 state.setState(StateComponent.State.ATTACKING);

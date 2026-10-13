@@ -120,7 +120,7 @@
         "assets/levels/32x16 tiles.tsx"
     ],
     "project": "level1.tiled-project",
-    "property.type": "float",
+    "property.type": "string",
     "recentFiles": [
         "assets/levels/32x32.tsx",
         "assets/levels/32x16 tiles.tsx",

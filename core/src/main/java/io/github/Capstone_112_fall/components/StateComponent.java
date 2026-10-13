@@ -12,6 +12,7 @@ public class StateComponent implements Component {
         FALLING,
         ATTACKING,
         HURT,
+        DODGING,
         DEAD
     }
 

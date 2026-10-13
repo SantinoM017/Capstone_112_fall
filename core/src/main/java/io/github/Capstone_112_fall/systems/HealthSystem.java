@@ -39,8 +39,10 @@ public class HealthSystem extends IteratingSystem {
             Entity hazard = health.takingDamageFrom;
             if (hazard != null && health.invulnerabilityTimer <= 0) {
                 DamageComponent damage = damageComponent.get(hazard);
-                health.takeDamage(damage.damage);
-                System.out.println(health.hp);
+                if(damage != null) {
+                    health.takeDamage(damage.damage);
+                    System.out.println(health.hp);
+                }
             }
         }
 
