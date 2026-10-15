@@ -11,6 +11,7 @@ public class AttackSystem extends IteratingSystem {
 
     private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private final ComponentMapper<AttackHitboxComponent> attackMapper = ComponentMapper.getFor(AttackHitboxComponent.class);
+    private final ComponentMapper<StateComponent> stateMapper = ComponentMapper.getFor(StateComponent.class);
 
     private final EntityManager entityFactory;
 
@@ -23,25 +24,26 @@ public class AttackSystem extends IteratingSystem {
     protected void processEntity(Entity entity, float deltaTime) {
         PlayerComponent player = playerMapper.get(entity);
         AttackHitboxComponent attack = attackMapper.get(entity);
+        StateComponent state = stateMapper.get(entity);
 
         // 1. Attack started, but no sensor fixture created yet
-        if (player.isAttacking && attack == null) {
+        if (player.currentAction == PlayerComponent.Action.ATTACKING && state.stateTime >= 0.1f) {
 //            System.out.println("Creating attack hitbox for entity: " + entity);
-            entityFactory.createPlayerAttackHitbox(entity);
-            return;
+            if(attack == null) {
+                entityFactory.createPlayerAttackHitbox(entity);
+                return;
+            }
         }
 
         // 2. Attack fixture is active -> manage timer
-        if (attack != null) {
-            attack.timer += deltaTime;
-
-            if (attack.timer >= attack.duration) {
+        if (state != null && state.currentState == StateComponent.State.ATTACKING) {
+            if (state.stateTime >= 0.4f) {
                 // Remove sensor fixture from Box2D body
                 entityFactory.destroyAttackHitbox(entity);
 
                 // Reset attack flags and state
-                player.attackRequested = false;
-                player.isAttacking = false;
+                player.resetAction();
+                state.setState(StateComponent.State.IDLE);
             }
         }
     }

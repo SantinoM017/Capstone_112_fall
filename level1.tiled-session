@@ -1,10 +1,10 @@
 {
     "activeFile": "assets/levels/level1.tmx",
     "expandedProjectPaths": [
-        ".idea",
-        ".",
+        "assets/levels",
         "assets",
-        "assets/levels"
+        ".",
+        ".idea"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -17,7 +17,7 @@
             "scaleInEditor": 1
         },
         "assets/levels/16x16 tiles.tsx": {
-            "scaleInDock": 4,
+            "scaleInDock": 3,
             "scaleInEditor": 5.5
         },
         "assets/levels/32x16 tiles.tsx": {
@@ -84,11 +84,11 @@
             "expandedObjectLayers": [
                 2
             ],
-            "scale": 2,
-            "selectedLayer": 2,
+            "scale": 5.5,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 954.75,
-                "y": -60.25
+                "x": 685.3636363636364,
+                "y": 89.36363636363637
             }
         },
         "assets/levels/pipe.tsx": {
@@ -122,7 +122,6 @@
     "project": "level1.tiled-project",
     "property.type": "string",
     "recentFiles": [
-        "assets/levels/32x32.tsx",
         "assets/levels/32x16 tiles.tsx",
         "assets/levels/16x16 tiles.tsx",
         "assets/levels/Tree 48x64.tsx",
@@ -130,6 +129,7 @@
         "assets/levels/Building2.tsx",
         "assets/levels/Building1.tsx",
         "assets/levels/level1.tmx",
+        "assets/levels/32x32.tsx",
         "assets/levels/16x16 Tiles.tsx",
         "assets/levels/AssetSheet_Pink.tsx",
         "assets/levels/blocks2.tsx",

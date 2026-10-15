@@ -38,8 +38,11 @@ This project has used AI tools and agents to assist in the development of this p
 
 - Gemini Flash:
     - Used to help structure the project and provide help in learning libGDX, Box2D, and AshleyECS API's
+    - Writing prompts for copilot/claude
+    - Enhancing code written by Copilot
     - Helped create SlopeFrictionSystem and Tangent-based movement on slopes (with copilot)
     - Helped create One way platform contact system
+    - Helped code the dodge system
 - Junie/Github Copilot:
     - Used to help write code and provide suggestions for code completion and refactoring.
     - Used to help explain parts of the code and to explain any questions or issues I am having with the code
@@ -49,7 +52,7 @@ This project has used AI tools and agents to assist in the development of this p
     - I refactored the player entity userData to refer to the entity itself instead of the grounded component. I asked the AI to refactor all uses of the grounded component as userData to use the entity itself from userData
     - Ran out of inline suggestion on 10/07/2026
     - Fixed a bug that made player attack hitboxes change player mass
-    - Change kinematic enemies to dynamic enemies if they are knockbacked
+    - Change kinematic enemies to dynamic enemies if they are knock backed
 - Claude (built-in Agent):
     - Used to generate code or provide suggestions.
     - Used to refactor large/complex parts of the codebase.
@@ -64,22 +67,23 @@ Important prompts:
 - how to make fall through platforms (You can step on them but can jump through them or fall through them) (Gemini)
 - Refactor my `knockbackSystem` and entity update logic to support knocking back Kinematic bodies in my LibGDX/Ashley ECS platformer.
 
-Please generate the following updates:
+    Please generate the following updates:
 
-1. Update `knockbackSystem`:
-   Before calling `applyLinearImpulse`, check if `affectedBody.body.getType() == BodyDef.BodyType.KinematicBody`. If it is, store a flag (or track the original type in `Box2DComponent`) and set the body type to `BodyDef.BodyType.DynamicBody`. This allows the body to react to the impulse and Box2D gravity.
+  1. Update `knockbackSystem`:
+     Before calling `applyLinearImpulse`, check if `affectedBody.body.getType() == BodyDef.BodyType.KinematicBody`. If it is, store a flag (or track the original type in `Box2DComponent`) and set the body type to `BodyDef.BodyType.DynamicBody`. This allows the body to react to the impulse and Box2D gravity.
 
-2. Create a reversion method (`checkAndRevertKinematicState`):
-   Generate a method to run in my AI or State system when `health.invulnerabilitytimer <= 0`. It should check if the body was temporarily made Dynamic.
+  2. Create a reversion method (`checkAndRevertKinematicState`):
+     Generate a method to run in my AI or State system when `health.invulnerabilitytimer <= 0`. It should check if the body was temporarily made Dynamic.
 
-3. Ground Snapping Logic (Crucial):
-   To prevent the entity from freezing in mid-air or sinking into the floor when switching back to Kinematic, the reversion method must:
-- Check if the entity's Y velocity is at or near 0 (falling has stopped).
-- Perform a short Box2D raycast directly downwards from the body's center (e.g., `rayLength = halfHeight + 0.1f`).
-- If the raycast hits static ground/terrain, snap the body's Y position exactly to `hitPoint.y + halfHeight`.
-- Zero out the linear velocity.
-- Finally, set the body type back to `BodyDef.BodyType.KinematicBody`.
+  3. Ground Snapping Logic (Crucial):
+     To prevent the entity from freezing in mid-air or sinking into the floor when switching back to Kinematic, the reversion method must:
+  - Check if the entity's Y velocity is at or near 0 (falling has stopped).
+  - Perform a short Box2D raycast directly downwards from the body's center (e.g., `rayLength = halfHeight + 0.1f`).
+  - If the raycast hits static ground/terrain, snap the body's Y position exactly to `hitPoint.y + halfHeight`.
+  - Zero out the linear velocity.
+  - Finally, set the body type back to `BodyDef.BodyType.KinematicBody`.
 
-Please provide the updated `knockbackSystem` code and the new reversion logic with the Box2D raycast callback.
-(prompt created by Gemini sent to CoPilot)
-- 
+    Please provide the updated `knockbackSystem` code and the new reversion logic with the Box2D raycast callback.
+    (prompt created by Gemini sent to CoPilot)
+- ok im thinking of adding a dodging/teleport system. My train of thought is in DodgeSystem when the player dodges a raycast is sent to the mouse if any physical/static object is detected it'll teleport to the object instead of teleporting through it but it'll let the player dodge through entities (gemini)
+

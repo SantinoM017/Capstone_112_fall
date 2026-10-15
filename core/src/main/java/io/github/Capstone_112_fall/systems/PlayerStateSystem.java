@@ -43,6 +43,7 @@ public class PlayerStateSystem extends IteratingSystem {
 
         if(health.hitStunTimer > 0) {
             state.currentState = StateComponent.State.HURT;
+            player.resetAction();
             state.stateTime += deltaTime;
             return;
         }
@@ -52,7 +53,7 @@ public class PlayerStateSystem extends IteratingSystem {
         Vector2 velocity = box2D.body.getLinearVelocity();
 
         // flip texture based on key input
-        if(!player.isAttacking) {
+        if(player.currentAction == PlayerComponent.Action.NA) {
             if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                 texture.flipX = false;
                 player.isFlipped = false;
@@ -63,17 +64,13 @@ public class PlayerStateSystem extends IteratingSystem {
         }
 
         // player movement states: jumping, falling, walking, idle
-        if(player.isDodging){
+        if(player.currentAction == PlayerComponent.Action.DODGING){
             if(state.currentState != StateComponent.State.DODGING) {
                 state.setState(StateComponent.State.DODGING);
                 state.stateTime = 0f;
             }
-            if (state.stateTime >= 0.6f) {
-                player.isDodging = false;
-            }
-        } else if(player.attackRequested) {
+        } else if(player.currentAction == PlayerComponent.Action.ATTACKING) {
             if(state.currentState != StateComponent.State.ATTACKING) {
-                player.isAttacking = true;
                 state.setState(StateComponent.State.ATTACKING);
                 state.stateTime = 0f;
             }

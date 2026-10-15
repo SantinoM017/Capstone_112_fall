@@ -4,14 +4,29 @@ import com.badlogic.ashley.core.Component;
 
 // tags a player entity
 public class PlayerComponent implements Component {
-    public boolean isAttacking;
-    public boolean attackRequested;
     public float attackCooldown;
     public float jumpCooldown;
     public boolean isFlipped;
     public boolean isMoving;
     public boolean isDroppingThrough;
     public float dropThroughTimer;
-    public boolean isDodging;
-    public float dodgeCooldown;
+    public enum Action {
+        NA,
+        ATTACKING,
+        DODGING
+    }
+
+    public Action currentAction = PlayerComponent.Action.NA;
+    public float actionTime = 0f;
+
+    public void setAction(Action action, float time) {
+        if(currentAction == PlayerComponent.Action.NA) {
+            currentAction = action;
+            actionTime = time;
+        }
+    }
+
+    public void resetAction(){
+        currentAction = PlayerComponent.Action.NA;
+    }
 }

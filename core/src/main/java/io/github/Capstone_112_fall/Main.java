@@ -93,6 +93,7 @@ public class Main extends ScreenAdapter {
         engine.addSystem(new EnemyAISystem(world));
         engine.addSystem(new EnemyStateSystem());
         engine.addSystem(new AttackSystem(entityManager));
+        engine.addSystem(new DodgingSystem(world, camera));
         engine.addSystem(new HealthSystem());
         engine.addSystem(new SlopeFrictionSystem()); // Pre-step friction adjustments
 
@@ -108,7 +109,7 @@ public class Main extends ScreenAdapter {
 
         // 5. CAMERA & RENDERING PHASE
         engine.addSystem(cameraSystem);
-        engine.addSystem(new RenderSystem(batch, camera));
+        engine.addSystem(new RenderSystem(batch, camera, atlas));
 
         // Modified by Claude (Anthropic AI assistant)
         entityManager.createMapEntities(MapBuilder.parse(map, PPM)); // turns tiles and objects into entities

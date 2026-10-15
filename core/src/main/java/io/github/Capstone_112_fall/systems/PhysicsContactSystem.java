@@ -17,6 +17,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
     private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
     private final ComponentMapper<KnockbackComponent> knockMapper = ComponentMapper.getFor(KnockbackComponent.class);
     private final ComponentMapper<Box2DComponent> box2DMapper = ComponentMapper.getFor(Box2DComponent.class);
+    private final ComponentMapper<DamageComponent> damageMapper = ComponentMapper.getFor(DamageComponent.class);
     private final Vector2 tempVertex = new Vector2(); // Reusable vector to prevent GC allocation
     private final List<PendingKnockback> pendingKnockbacks = new ArrayList<>();
 
@@ -148,7 +149,11 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Entity enemy = (Entity) enemyHurtboxFixture.getBody().getUserData();
         Entity player = (Entity) attackFixture.getBody().getUserData();
         HealthComponent healthComponent = healthMapper.get(enemy);
-        damageSystem(isBegin, healthComponent, player);
+        DamageComponent damageComponent = damageMapper.get(player);
+        if(isBegin && healthComponent.invulnerabilityTimer <= 0) {
+            healthComponent.takeDamage(damageComponent.damage);
+            System.out.println(healthComponent.hp);
+        }
         knockbackSystem(isBegin, player, enemy, healthComponent);
     }
 

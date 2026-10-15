@@ -6,6 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Array;
@@ -26,10 +27,12 @@ public class RenderSystem extends EntitySystem {
     private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
     private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private ImmutableArray<Entity> renderQueue;
+    private final TextureAtlas atlas;
 
-    public RenderSystem(SpriteBatch batch, OrthographicCamera camera) {
+    public RenderSystem(SpriteBatch batch, OrthographicCamera camera, TextureAtlas atlas) {
         this.batch = batch;
         this.camera = camera;
+        this.atlas = atlas;
         hitShader = new ShaderProgram(
             Gdx.files.internal("shaders/default.vert"),
             Gdx.files.internal("shaders/hit_flash.frag")

@@ -119,7 +119,6 @@ public class EntityManager {
 
     public void createPlayerAttackHitbox(Entity player) {
         Box2DComponent box2D = player.getComponent(Box2DComponent.class);
-        StateComponent state = player.getComponent(StateComponent.class);
         PlayerComponent playerComp = player.getComponent(PlayerComponent.class);
 
         if (box2D == null || box2D.body == null) return;
@@ -143,8 +142,6 @@ public class EntityManager {
         // Attach tracking component to the entity to manage lifespan
         AttackHitboxComponent attackComp = engine.createComponent(AttackHitboxComponent.class);
         attackComp.sensorFixture = attackFixture;
-        attackComp.duration = 0.4f;
-        attackComp.timer = 0f;
 
         createDamageComponent(player,20);
 
@@ -172,6 +169,7 @@ public class EntityManager {
             // Clean up components from the Ashley ECS entity
             entity.remove(AttackHitboxComponent.class);
             entity.remove(DamageComponent.class);
+            entity.remove(KnockbackComponent.class);
         }
     }
 

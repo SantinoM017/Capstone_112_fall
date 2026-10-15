@@ -93,15 +93,14 @@ public class PlayerInputSystem extends IteratingSystem {
 
         // --- 4. ATTACK INPUT ---
         player.attackCooldown = Math.max(0f, player.attackCooldown - deltaTime);
-        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown <= 0f && !player.isDodging) {
-            player.attackRequested = true;
-            player.attackCooldown = 0.5f;
+        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown <= 0f) {
+            player.setAction(PlayerComponent.Action.ATTACKING, 0.5f);
+            if(player.currentAction == PlayerComponent.Action.ATTACKING) player.attackCooldown = 0.5f;
         }
 
-        player.dodgeCooldown = Math.max(0f, player.dodgeCooldown - deltaTime);
-        if ((Gdx.input.isKeyJustPressed(Input.Keys.Q) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) && player.dodgeCooldown <= 0f) {
-            player.isDodging = true;
-            player.dodgeCooldown = 3f;
+        player.actionTime = Math.max(0f, player.actionTime - deltaTime);
+        if ((Gdx.input.isKeyJustPressed(Input.Keys.Q) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) && player.actionTime <= 0f) {
+            player.setAction(PlayerComponent.Action.DODGING, 5f);
         }
 
 
