@@ -66,7 +66,6 @@ public class RenderSystem extends EntitySystem {
             AnimationComponent animation = animationMapper.get(entity);
             StateComponent state = stateMapper.get(entity);
             HealthComponent health = healthMapper.get(entity);
-            PlayerComponent player = playerMapper.get(entity);
 
             if(animation != null && state != null && animation.animations.containsKey(state.currentState)) {
                 Animation<TextureRegion> currentAnimation = animation.animations.get(state.currentState);

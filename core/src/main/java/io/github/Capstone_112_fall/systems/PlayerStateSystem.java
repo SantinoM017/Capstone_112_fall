@@ -33,11 +33,9 @@ public class PlayerStateSystem extends IteratingSystem {
         HealthComponent health = healthComponent.get(entity);
 
 
-        if(health.hp <= 0) {
+        if(player.currentAction == PlayerComponent.Action.DEAD) {
             state.setState(StateComponent.State.DEAD);
             state.stateTime += deltaTime;
-            float velY = Math.min(box2D.body.getLinearVelocity().y, 0f);
-            box2D.body.setLinearVelocity(0,velY);
             return;
         }
 
@@ -69,22 +67,35 @@ public class PlayerStateSystem extends IteratingSystem {
                 state.setState(StateComponent.State.DODGING);
                 state.stateTime = 0f;
             }
-        } else if(player.currentAction == PlayerComponent.Action.ATTACKING) {
+        }
+
+        if(player.currentAction == PlayerComponent.Action.ATTACKING) {
             if(state.currentState != StateComponent.State.ATTACKING) {
                 state.setState(StateComponent.State.ATTACKING);
                 state.stateTime = 0f;
             }
-        } else if(!grounded.isGrounded) {
-            if(velocity.y > 0.1f) {
-                state.setState(StateComponent.State.JUMPING);
-            } else if (velocity.y < -0.1f) {
-                state.setState(StateComponent.State.FALLING);
+        }
+
+        if(player.currentAction == PlayerComponent.Action.PARRY) {
+            if(state.currentState != StateComponent.State.PARRY) {
+                state.setState(StateComponent.State.PARRY);
+                state.stateTime = 0f;
             }
-        } else {
-            if(velocity.x != 0) {
-                state.setState(StateComponent.State.WALKING);
+        }
+
+        if(player.currentAction == PlayerComponent.Action.NA) {
+            if (!grounded.isGrounded) {
+                if (velocity.y > 0.1f) {
+                    state.setState(StateComponent.State.JUMPING);
+                } else if (velocity.y < -0.1f) {
+                    state.setState(StateComponent.State.FALLING);
+                }
             } else {
-                if(state.currentState != StateComponent.State.LONG_IDLE) state.setState(StateComponent.State.IDLE);
+                if (velocity.x != 0) {
+                    state.setState(StateComponent.State.WALKING);
+                } else {
+                    if (state.currentState != StateComponent.State.LONG_IDLE) state.setState(StateComponent.State.IDLE);
+                }
             }
         }
 

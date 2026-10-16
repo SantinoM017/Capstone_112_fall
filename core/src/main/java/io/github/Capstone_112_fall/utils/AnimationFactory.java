@@ -40,7 +40,7 @@ public class AnimationFactory {
         );
         animComp.animations.put(
             StateComponent.State.ATTACKING,
-            createAnimation("character_attack", 0.075f, Animation.PlayMode.NORMAL)
+            createAnimation("character_attack", 0.125f, Animation.PlayMode.NORMAL)
         );
         animComp.animations.put(
             StateComponent.State.HURT,
@@ -48,7 +48,11 @@ public class AnimationFactory {
         );
         animComp.animations.put(
             StateComponent.State.DODGING,
-            createAnimation("character_dodge", 0.1f, Animation.PlayMode.NORMAL)
+            createAnimation("character_dodge", 0.08f, Animation.PlayMode.NORMAL)
+        );
+        animComp.animations.put(
+            StateComponent.State.PARRY,
+            createAnimation("character_parry", 0.05f, Animation.PlayMode.NORMAL)
         );
         animComp.animations.put(
             StateComponent.State.DEAD,

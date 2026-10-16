@@ -7,30 +7,35 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.Capstone_112_fall.components.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 // checks for all contacts
 public class PhysicsContactSystem extends EntitySystem implements ContactListener {
     private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private final ComponentMapper<GroundedComponent> groundedMapper = ComponentMapper.getFor(GroundedComponent.class);
     private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
-    private final ComponentMapper<KnockbackComponent> knockMapper = ComponentMapper.getFor(KnockbackComponent.class);
-    private final ComponentMapper<Box2DComponent> box2DMapper = ComponentMapper.getFor(Box2DComponent.class);
     private final ComponentMapper<DamageComponent> damageMapper = ComponentMapper.getFor(DamageComponent.class);
+    private final ComponentMapper<KnockbackComponent> kbMapper = ComponentMapper.getFor(KnockbackComponent.class);
+    private final ComponentMapper<Box2DComponent> boxMapper = ComponentMapper.getFor(Box2DComponent.class);
     private final Vector2 tempVertex = new Vector2(); // Reusable vector to prevent GC allocation
-    private final List<PendingKnockback> pendingKnockbacks = new ArrayList<>();
+    private final World world;
+    private final Queue<PendingKnockback> pendingKnockbacks = new ArrayDeque<>();
 
     public PhysicsContactSystem(World world) {
+        this.world = world;
         world.setContactListener(this);
     }
 
     @Override
     public void update(float deltaTime) {
-        for (PendingKnockback pending : pendingKnockbacks) {
-            applyKnockback(pending);
+        if (world.isLocked()) return;
+
+        PendingKnockback pending;
+        while ((pending = pendingKnockbacks.poll()) != null) {
+            pending.health.applyKnockback(
+                pending.target, pending.attacker, pending.health, kbMapper, boxMapper);
         }
-        pendingKnockbacks.clear();
     }
 
     @Override
@@ -41,6 +46,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         checkFootContact(fixtureA, fixtureB, true);
         checkSensorContact(fixtureA, fixtureB, true);
         checkPlayerAttackContact(fixtureA, fixtureB, true);
+        checkParryContact(fixtureA, fixtureB, true);
     }
 
     @Override
@@ -51,6 +57,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         checkFootContact(fixtureA, fixtureB, false);
         checkSensorContact(fixtureA, fixtureB, false);
         checkPlayerAttackContact(fixtureA, fixtureB, false);
+        checkParryContact(fixtureA, fixtureB, false);
     }
 
     @Override
@@ -93,8 +100,8 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
     }
 
     private void checkSensorContact(Fixture fixtureA, Fixture fixtureB, boolean isBegin) {
-        Fixture playerFixture = isPlayerFixture(fixtureA) ? fixtureA
-            : isPlayerFixture(fixtureB) ? fixtureB : null;
+        Fixture playerFixture = isPlayerBodyFixture(fixtureA) ? fixtureA
+            : isPlayerBodyFixture(fixtureB) ? fixtureB : null;
         Fixture sensorFixture = isDamageSensor(fixtureA) ? fixtureA
             : isDamageSensor(fixtureB) ? fixtureB : null;
 
@@ -126,7 +133,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
                 damageSystem(isBegin, health, sensorEntity); return;
             case "enemy_attackbox":
                 damageSystem(isBegin, health, sensorEntity);
-                knockbackSystem(isBegin, sensorEntity, playerEntity, health);
+                setKnockbackState(isBegin, sensorEntity, health);
         }
     }
 
@@ -150,11 +157,43 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Entity player = (Entity) attackFixture.getBody().getUserData();
         HealthComponent healthComponent = healthMapper.get(enemy);
         DamageComponent damageComponent = damageMapper.get(player);
-        if(isBegin && healthComponent.invulnerabilityTimer <= 0) {
+        if(isBegin && healthComponent != null && damageComponent != null) {
+            if (healthComponent.invulnerabilityTimer <= 0f) {
+                pendingKnockbacks.add(new PendingKnockback(enemy, player, healthComponent));
+            }
             healthComponent.takeDamage(damageComponent.damage);
             System.out.println(healthComponent.hp);
         }
-        knockbackSystem(isBegin, player, enemy, healthComponent);
+    }
+
+    private void checkParryContact(Fixture fixtureA, Fixture fixtureB, boolean isBegin) {
+        Fixture parryFixture = null;
+        Fixture enemyAttackFixture = null;
+
+
+        if ("player_parry_hitbox".equals(fixtureA.getUserData())) parryFixture = fixtureA;
+        if ("player_parry_hitbox".equals(fixtureB.getUserData())) parryFixture = fixtureB;
+
+        if ("enemy_attackbox".equals(fixtureA.getUserData())) enemyAttackFixture = fixtureA;
+        if ("enemy_attackbox".equals(fixtureB.getUserData())) enemyAttackFixture = fixtureB;
+
+        // Both a valid attack fixture and a sensor fixture must be present
+        if (parryFixture == null || enemyAttackFixture == null) {
+            return;
+        }
+
+        Entity enemy = (Entity) enemyAttackFixture.getBody().getUserData();
+        Entity player = (Entity) parryFixture.getBody().getUserData();
+        HealthComponent healthComponent = healthMapper.get(enemy);
+        DamageComponent damageComponent = damageMapper.get(enemy);
+        if(isBegin){
+            if (healthComponent.invulnerabilityTimer <= 0f) {
+                pendingKnockbacks.add(new PendingKnockback(enemy, player, healthComponent));
+            }
+            healthComponent.takeDamage(damageComponent.damage / 2);
+            System.out.println("parry damage:" + damageComponent.damage / 2);
+            System.out.println(healthComponent.hp);
+        }
     }
 
     private boolean isPlayerFixture(Fixture fixture) {
@@ -162,6 +201,11 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         return "player_body".equals(tag)
             || "player_foot".equals(tag)
             || "player_slope_fixture".equals(tag);
+    }
+
+    private boolean isPlayerBodyFixture(Fixture fixture) {
+        Object tag = fixture.getUserData();
+        return "player_body".equals(tag) || "player_slope_fixture".equals(tag);
     }
 
     private boolean isDamageSensor(Fixture fixture) {
@@ -248,52 +292,27 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         }
     }
 
-    private void knockbackSystem(boolean isBegin, Entity hazard, Entity affectedTarget, HealthComponent health) {
-        if (isBegin && health != null && health.hitStunTimer <= 0) {
-            KnockbackComponent knockback = knockMapper.get(hazard);
-            Box2DComponent hazardBody = box2DMapper.get(hazard);
-            Box2DComponent affectedBody = box2DMapper.get(affectedTarget);
-            if (knockback == null || hazardBody == null || hazardBody.body == null
-                || affectedBody == null || affectedBody.body == null) return;
-
-            float direction = (affectedBody.body.getPosition().x >= hazardBody.body.getPosition().x) ? 1.0f : -1.0f;
-            pendingKnockbacks.add(new PendingKnockback(
-                affectedTarget, knockback.xVel * direction * health.knockbackResistance, knockback.yVel * health.knockbackResistance));
-        }
-    }
-
-    private void applyKnockback(PendingKnockback pending) {
-        Box2DComponent affectedBody = box2DMapper.get(pending.target);
-        if (affectedBody == null || affectedBody.body == null) return;
-
-        Body body = affectedBody.body;
-        if (body.getType() == BodyDef.BodyType.KinematicBody) {
-            affectedBody.temporarilyDynamicFromKinematic = true;
-            affectedBody.previousDynamicX = body.getPosition().x;
-            affectedBody.previousDynamicY = body.getPosition().y;
-            affectedBody.hasPreviousDynamicY = true;
-            body.setType(BodyDef.BodyType.DynamicBody);
-        }
-
-        body.setLinearVelocity(0, 0);
-        body.applyLinearImpulse(
-            new Vector2(pending.impulseX, pending.impulseY), body.getWorldCenter(), true);
-
-        HealthComponent health = healthMapper.get(pending.target);
-        if (health != null) {
-            health.hitStunTimer = health.hitStunDuration;
+    private void setKnockbackState(boolean isBegin, Entity hazard, HealthComponent health) {
+        if(isBegin) {
+            health.isTakingKnockback = true;
+            health.takingKnockbackFrom = hazard;
+            System.out.println("start kb");
+        } else {
+            health.isTakingKnockback = false;
+            health.takingKnockbackFrom = null;
+            System.out.println("end kb");
         }
     }
 
     private static class PendingKnockback {
         private final Entity target;
-        private final float impulseX;
-        private final float impulseY;
+        private final Entity attacker;
+        private final HealthComponent health;
 
-        private PendingKnockback(Entity target, float impulseX, float impulseY) {
+        private PendingKnockback(Entity target, Entity attacker, HealthComponent health) {
             this.target = target;
-            this.impulseX = impulseX;
-            this.impulseY = impulseY;
+            this.attacker = attacker;
+            this.health = health;
         }
     }
 }

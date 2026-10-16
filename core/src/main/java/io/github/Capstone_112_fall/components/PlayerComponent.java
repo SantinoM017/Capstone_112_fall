@@ -13,7 +13,9 @@ public class PlayerComponent implements Component {
     public enum Action {
         NA,
         ATTACKING,
-        DODGING
+        DODGING,
+        PARRY,
+        DEAD
     }
 
     public Action currentAction = PlayerComponent.Action.NA;

@@ -13,6 +13,7 @@ public class StateComponent implements Component {
         ATTACKING,
         HURT,
         DODGING,
+        PARRY,
         DEAD
     }
 

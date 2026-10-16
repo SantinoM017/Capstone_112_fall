@@ -88,12 +88,13 @@ public class Main extends ScreenAdapter {
         engine.addSystem(new PlayerInputSystem());
 
         // 2. COMBAT & BEHAVIOR LOGIC PHASE
-        // Modify movement intentions, apply state changes, spawn attack hitboxes
+        // Modify movement intentions, apply state changes, and manage player extensions
         engine.addSystem(new PlayerStateSystem());
         engine.addSystem(new EnemyAISystem(world));
         engine.addSystem(new EnemyStateSystem());
         engine.addSystem(new AttackSystem(entityManager));
-        engine.addSystem(new DodgingSystem(world, camera));
+        engine.addSystem(new DodgingSystem(world, camera, atlas));
+        engine.addSystem(new ParrySystem(entityManager));
         engine.addSystem(new HealthSystem());
         engine.addSystem(new SlopeFrictionSystem()); // Pre-step friction adjustments
 

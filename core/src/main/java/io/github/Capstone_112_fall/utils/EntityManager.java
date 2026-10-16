@@ -117,59 +117,66 @@ public class EntityManager {
         createBoundaryWall(mapWidth + wallThickness / 2f, wallCenterY, wallThickness, wallHeight);
     }
 
-    public void createPlayerAttackHitbox(Entity player) {
+    public void createPlayerExtension(Entity player, PlayerExtensionComponent.Type type) {
         Box2DComponent box2D = player.getComponent(Box2DComponent.class);
         PlayerComponent playerComp = player.getComponent(PlayerComponent.class);
 
-        if (box2D == null || box2D.body == null) return;
+        if (box2D == null || box2D.body == null || playerComp == null || type == null
+            || player.getComponent(PlayerExtensionComponent.class) != null) return;
 
-        // Determine attack direction based on facing direction (-1 for Left, 1 for Right)
         float direction = !playerComp.isFlipped ? 1.0f : -1.0f;
 
-        // Create sensor fixture offset in front of the player
         PolygonShape shape = new PolygonShape();
-        shape.setAsBox(0.2f, 0.5f, new Vector2(0.5f * direction, 0.1f), 0f);
+        if(type == PlayerExtensionComponent.Type.ATTACK) {
+            shape.setAsBox(0.2f, 0.5f, new Vector2(0.5f * direction, 0.1f), 0f);
+        } else {
+            shape.setAsBox(0.1f, 0.5f, new Vector2(0.4f * direction, 0.1f), 0f);
+        }
 
         FixtureDef fDef = new FixtureDef();
         fDef.shape = shape;
-        fDef.isSensor = true; // Sensor ensures it detects overlap without physical collision response
+        fDef.isSensor = true;
 
-        Fixture attackFixture = box2D.body.createFixture(fDef);
-        attackFixture.setUserData("player_attack_hitbox");
+        Fixture sensorFixture = box2D.body.createFixture(fDef);
+        sensorFixture.setUserData(type == PlayerExtensionComponent.Type.ATTACK
+            ? "player_attack_hitbox"
+            : "player_parry_hitbox");
         shape.dispose();
         restorePlayerMass(box2D.body);
 
-        // Attach tracking component to the entity to manage lifespan
-        AttackHitboxComponent attackComp = engine.createComponent(AttackHitboxComponent.class);
-        attackComp.sensorFixture = attackFixture;
+        PlayerExtensionComponent extension = engine.createComponent(PlayerExtensionComponent.class);
+        extension.sensorFixture = sensorFixture;
+        extension.type = type;
 
-        createDamageComponent(player,20);
+        if (type == PlayerExtensionComponent.Type.ATTACK) {
+            createDamageComponent(player, 20);
+            createKnockbackComponent(player, 3, 1);
+        } else {
+            createKnockbackComponent(player,5, 2);
+        }
 
-        createKnockbackComponent(player, 3, 1);
-
-        player.add(attackComp);
+        player.add(extension);
         box2D.body.setAwake(true);
     }
 
-    public void destroyAttackHitbox(Entity entity) {
+    public void destroyPlayerExtension(Entity entity) {
         if (entity == null) return;
 
         Box2DComponent box2D = entity.getComponent(Box2DComponent.class);
-        AttackHitboxComponent attackComp = entity.getComponent(AttackHitboxComponent.class);
+        PlayerExtensionComponent extension = entity.getComponent(PlayerExtensionComponent.class);
 
-        // Ensure the entity actually has a Box2D body and an active attack component
-        if (attackComp != null) {
-            if (box2D != null && box2D.body != null && attackComp.sensorFixture != null) {
-                // Safely destroy the sensor fixture attached to the body
-                box2D.body.destroyFixture(attackComp.sensorFixture);
-                attackComp.sensorFixture = null;
+        if (extension != null) {
+            if (box2D != null && box2D.body != null && extension.sensorFixture != null) {
+                box2D.body.destroyFixture(extension.sensorFixture);
+                extension.sensorFixture = null;
                 restorePlayerMass(box2D.body);
             }
 
-            // Clean up components from the Ashley ECS entity
-            entity.remove(AttackHitboxComponent.class);
-            entity.remove(DamageComponent.class);
-            entity.remove(KnockbackComponent.class);
+            entity.remove(PlayerExtensionComponent.class);
+            if (extension.type == PlayerExtensionComponent.Type.ATTACK) {
+                entity.remove(DamageComponent.class);
+                entity.remove(KnockbackComponent.class);
+            }
         }
     }
 

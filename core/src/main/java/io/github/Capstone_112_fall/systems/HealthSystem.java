@@ -5,11 +5,14 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import io.github.Capstone_112_fall.components.*;
 
 public class HealthSystem extends IteratingSystem {
     private final ComponentMapper<HealthComponent> healthComponent = ComponentMapper.getFor(HealthComponent.class);
     private final ComponentMapper<DamageComponent> damageComponent = ComponentMapper.getFor(DamageComponent.class);
+    private final ComponentMapper<KnockbackComponent> knockbackComponent = ComponentMapper.getFor(KnockbackComponent.class);
     private final ComponentMapper<QueueForDestructionComponent> qdComponent = ComponentMapper.getFor(QueueForDestructionComponent.class);
     private final ComponentMapper<AnimationComponent> animComp = ComponentMapper.getFor(AnimationComponent.class);
     private final ComponentMapper<Box2DComponent> box2DComp = ComponentMapper.getFor(Box2DComponent.class);
@@ -33,6 +36,10 @@ public class HealthSystem extends IteratingSystem {
 
         if(box2D.body != null && box2D.body.getPosition().y < -10f) {
             health.hp -= 1;
+        }
+
+        if (health.isTakingKnockback && health.invulnerabilityTimer <= 0) {
+            health.applyKnockback(entity, health.takingKnockbackFrom, health, knockbackComponent, box2DComp);
         }
 
         if(health.isTakingDamage) {
@@ -60,4 +67,6 @@ public class HealthSystem extends IteratingSystem {
             entity.add(newQd);
         }
     }
+
+
 }

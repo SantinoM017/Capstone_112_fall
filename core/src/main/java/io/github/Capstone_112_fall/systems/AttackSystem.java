@@ -10,7 +10,7 @@ import io.github.Capstone_112_fall.utils.EntityManager;
 public class AttackSystem extends IteratingSystem {
 
     private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
-    private final ComponentMapper<AttackHitboxComponent> attackMapper = ComponentMapper.getFor(AttackHitboxComponent.class);
+    private final ComponentMapper<PlayerExtensionComponent> extensionMapper = ComponentMapper.getFor(PlayerExtensionComponent.class);
     private final ComponentMapper<StateComponent> stateMapper = ComponentMapper.getFor(StateComponent.class);
 
     private final EntityManager entityFactory;
@@ -23,14 +23,14 @@ public class AttackSystem extends IteratingSystem {
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
         PlayerComponent player = playerMapper.get(entity);
-        AttackHitboxComponent attack = attackMapper.get(entity);
+        PlayerExtensionComponent extension = extensionMapper.get(entity);
         StateComponent state = stateMapper.get(entity);
 
         // 1. Attack started, but no sensor fixture created yet
         if (player.currentAction == PlayerComponent.Action.ATTACKING && state.stateTime >= 0.1f) {
 //            System.out.println("Creating attack hitbox for entity: " + entity);
-            if(attack == null) {
-                entityFactory.createPlayerAttackHitbox(entity);
+            if(extension == null) {
+                entityFactory.createPlayerExtension(entity, PlayerExtensionComponent.Type.ATTACK);
                 return;
             }
         }
@@ -39,12 +39,16 @@ public class AttackSystem extends IteratingSystem {
         if (state != null && state.currentState == StateComponent.State.ATTACKING) {
             if (state.stateTime >= 0.4f) {
                 // Remove sensor fixture from Box2D body
-                entityFactory.destroyAttackHitbox(entity);
+                entityFactory.destroyPlayerExtension(entity);
 
                 // Reset attack flags and state
                 player.resetAction();
                 state.setState(StateComponent.State.IDLE);
             }
+        }
+
+        if (state != null && state.currentState == StateComponent.State.HURT) {
+            entityFactory.destroyPlayerExtension(entity);
         }
     }
 }

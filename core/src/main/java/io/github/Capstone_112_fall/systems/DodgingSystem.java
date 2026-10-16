@@ -6,6 +6,8 @@ import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
@@ -25,10 +27,13 @@ public class DodgingSystem extends IteratingSystem {
     private final Vector3 unprojectTmp = new Vector3();
     private final Vector2 tempVertex = new Vector2();
 
-    public DodgingSystem(World world, Camera camera) {
+    private final TextureAtlas atlas;
+
+    public DodgingSystem(World world, Camera camera, TextureAtlas atlas) {
         super(Family.all(PlayerComponent.class, StateComponent.class, Box2DComponent.class).get());
         this.world = world;
         this.camera = camera;
+        this.atlas = atlas;
     }
 
     @Override
@@ -43,8 +48,10 @@ public class DodgingSystem extends IteratingSystem {
         // Manage Dodge execution timer
         if (state != null && state.currentState == StateComponent.State.DODGING) {
             // Note: Adjust stateTime check depending on whether dodge is instant or delayed
+            health.invulnerabilityTimer = 0.8f;
             if (state.stateTime >= 0.5f) { // Trigger dodge action
                 executeDodge(box2d, health);
+                createSmoke(entity);
                 box2d.body.setAwake(true);
                 player.resetAction();
                 state.setState(StateComponent.State.IDLE);
@@ -106,10 +113,25 @@ public class DodgingSystem extends IteratingSystem {
         body.setTransform(finalDestination.x, finalDestination.y, body.getAngle());
 
         // Zero out residual velocities to prevent launching immediately after teleport
-        body.setLinearVelocity(0f, 0f);
+        body.setAwake(true);
+        body.setLinearVelocity(1f, 1f);
+    }
 
-        // Grant temporary i-frames during/after dodge
-        health.invulnerabilityTimer = 0.3f; // 300ms i-frames
+    private void createSmoke(Entity entity) {
+        Entity smoke = getEngine().createEntity();
+        Box2DComponent box2d = box2DMapper.get(entity);
+        TransformComponent transform = getEngine().createComponent(TransformComponent.class);
+        transform.x = box2d.body.getPosition().x;
+        transform.y = box2d.body.getPosition().y;
+        smoke.add(transform);
+        TextureComponent texture = getEngine().createComponent(TextureComponent.class);
+        texture.textureRegion = atlas.findRegion("smoke");
+        smoke.add(texture);
+        QueueForDestructionComponent qd = getEngine().createComponent(QueueForDestructionComponent.class);
+        qd.destructionTimer = 0.5f;
+        smoke.add(qd);
+        getEngine().addEntity(smoke);
+        System.out.println("smoke created");
     }
 
     private boolean isStaticTerrain(Fixture fixture) {

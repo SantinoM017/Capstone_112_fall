@@ -17,6 +17,7 @@ public class EnemyAISystem extends IteratingSystem {
     private final ComponentMapper<Box2DComponent> box2dMapper = ComponentMapper.getFor(Box2DComponent.class);
     private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
     private final ComponentMapper<TextureComponent> textureMapper = ComponentMapper.getFor(TextureComponent.class);
+    private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private final Vector2 halfExtents = new Vector2();
     private final Vector2 tempVertex = new Vector2();
 
@@ -50,7 +51,7 @@ public class EnemyAISystem extends IteratingSystem {
         }
 
         // 3. SHARED: Player Target Acquisition & State Machine
-        updateTargeting(entity, enemy, box2d);
+        updateTargeting(enemy, box2d);
 
         // 4. DELEGATED: Execute entity-specific movement behavior strategy
         if (enemy.behavior != null) {
@@ -63,7 +64,7 @@ public class EnemyAISystem extends IteratingSystem {
         }
     }
 
-    private void updateTargeting(Entity enemyEntity, EnemyComponent enemy, Box2DComponent box2d) {
+    private void updateTargeting(EnemyComponent enemy, Box2DComponent box2d) {
         Entity playerEntity = getPlayerEntity();
         if (playerEntity == null) {
             enemy.aiState = EnemyComponent.AIState.PATROL;
@@ -81,7 +82,8 @@ public class EnemyAISystem extends IteratingSystem {
 
         float dist = enemyPos.dst(playerPos);
 
-        if (dist <= enemy.detectionRange) {
+        PlayerComponent playerComp = playerMapper.get(playerEntity);
+        if (dist <= enemy.detectionRange && playerComp.currentAction != PlayerComponent.Action.DEAD) {
             enemy.aiState = EnemyComponent.AIState.CHASE;
 
             // Calculate half-widths dynamically for both bodies

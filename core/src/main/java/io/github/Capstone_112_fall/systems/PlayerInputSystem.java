@@ -42,6 +42,14 @@ public class PlayerInputSystem extends IteratingSystem {
             return;
         }
 
+
+        if(health != null && health.hp <= 0) {
+            player.setAction(PlayerComponent.Action.DEAD, 10f);
+            float velY = Math.min(box2D.body.getLinearVelocity().y, 0f);
+            box2D.body.setLinearVelocity(0,velY);
+            return;
+        }
+
         float speed = 2f; // meters per second
         boolean movingLeft = Gdx.input.isKeyPressed(Input.Keys.A);
         boolean movingRight = Gdx.input.isKeyPressed(Input.Keys.D);
@@ -93,7 +101,7 @@ public class PlayerInputSystem extends IteratingSystem {
 
         // --- 4. ATTACK INPUT ---
         player.attackCooldown = Math.max(0f, player.attackCooldown - deltaTime);
-        if ((Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isButtonPressed(Input.Buttons.LEFT)) && player.attackCooldown <= 0f) {
+        if ((Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) && player.attackCooldown <= 0f) {
             player.setAction(PlayerComponent.Action.ATTACKING, 0.5f);
             if(player.currentAction == PlayerComponent.Action.ATTACKING) player.attackCooldown = 0.5f;
         }
@@ -101,6 +109,11 @@ public class PlayerInputSystem extends IteratingSystem {
         player.actionTime = Math.max(0f, player.actionTime - deltaTime);
         if ((Gdx.input.isKeyJustPressed(Input.Keys.Q) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) && player.actionTime <= 0f) {
             player.setAction(PlayerComponent.Action.DODGING, 5f);
+        }
+
+        player.actionTime = Math.max(0f, player.actionTime - deltaTime);
+        if ((Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isButtonJustPressed(Input.Buttons.FORWARD)) && player.actionTime <= 0f) {
+            player.setAction(PlayerComponent.Action.PARRY, 5f);
         }
 
 
