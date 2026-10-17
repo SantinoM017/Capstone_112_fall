@@ -152,7 +152,9 @@ public class EntityManager {
             createDamageComponent(player, 20);
             createKnockbackComponent(player, 3, 1);
         } else {
-            createKnockbackComponent(player,5, 2);
+            createKnockbackComponent(player,1, 1);
+            createStunComponent(player, 2f);
+
         }
 
         player.add(extension);
@@ -176,6 +178,9 @@ public class EntityManager {
             if (extension.type == PlayerExtensionComponent.Type.ATTACK) {
                 entity.remove(DamageComponent.class);
                 entity.remove(KnockbackComponent.class);
+            } else {
+                entity.remove(KnockbackComponent.class);
+                entity.remove(StunComponent.class);
             }
         }
     }
@@ -222,7 +227,6 @@ public class EntityManager {
         bottomCircle.dispose();
 
         // --- 3. Foot Sensor (Ground / Slope Detection) ---
-        // Centered at y = -0.49m (overlaps feet boundary at -0.5m)
         PolygonShape footShape = new PolygonShape();
         footShape.setAsBox(0.15f, 0.02f, new Vector2(0, -0.45f), 0);
 
@@ -535,5 +539,10 @@ public class EntityManager {
         entity.add(health);
     }
 
+    private void createStunComponent(Entity entity, float stunTime) {
+        StunComponent stun = engine.createComponent(StunComponent.class);
+        stun.stunTime = stunTime;
+        entity.add(stun);
+    }
 
 }

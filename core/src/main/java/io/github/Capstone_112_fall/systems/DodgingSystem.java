@@ -1,13 +1,11 @@
 package io.github.Capstone_112_fall.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
@@ -18,11 +16,6 @@ public class DodgingSystem extends IteratingSystem {
 
     private final World world;
     private final Camera camera;
-
-    private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
-    private final ComponentMapper<StateComponent> stateMapper = ComponentMapper.getFor(StateComponent.class);
-    private final ComponentMapper<Box2DComponent> box2DMapper = ComponentMapper.getFor(Box2DComponent.class);
-    private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
 
     private final Vector3 unprojectTmp = new Vector3();
     private final Vector2 tempVertex = new Vector2();
@@ -38,10 +31,10 @@ public class DodgingSystem extends IteratingSystem {
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        PlayerComponent player = playerMapper.get(entity);
-        StateComponent state = stateMapper.get(entity);
-        Box2DComponent box2d = box2DMapper.get(entity);
-        HealthComponent health = healthMapper.get(entity);
+        PlayerComponent player = ComponentMappers.PLAYER.get(entity);
+        StateComponent state = ComponentMappers.STATE.get(entity);
+        Box2DComponent box2d = ComponentMappers.BOX_2D.get(entity);
+        HealthComponent health = ComponentMappers.HEALTH.get(entity);
 
         if (box2d == null || box2d.body == null) return;
 
@@ -119,7 +112,7 @@ public class DodgingSystem extends IteratingSystem {
 
     private void createSmoke(Entity entity) {
         Entity smoke = getEngine().createEntity();
-        Box2DComponent box2d = box2DMapper.get(entity);
+        Box2DComponent box2d = ComponentMappers.BOX_2D.get(entity);
         TransformComponent transform = getEngine().createComponent(TransformComponent.class);
         transform.x = box2d.body.getPosition().x;
         transform.y = box2d.body.getPosition().y;
@@ -131,7 +124,7 @@ public class DodgingSystem extends IteratingSystem {
         qd.destructionTimer = 0.5f;
         smoke.add(qd);
         getEngine().addEntity(smoke);
-        System.out.println("smoke created");
+//        System.out.println("smoke created");
     }
 
     private boolean isStaticTerrain(Fixture fixture) {

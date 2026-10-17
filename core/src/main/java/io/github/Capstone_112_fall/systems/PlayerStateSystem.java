@@ -1,6 +1,5 @@
 package io.github.Capstone_112_fall.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
@@ -11,13 +10,6 @@ import io.github.Capstone_112_fall.components.*;
 
 // updates player state based on velocity and grounded status
 public class PlayerStateSystem extends IteratingSystem {
-    private final ComponentMapper<StateComponent> stateComponent = ComponentMapper.getFor(StateComponent.class);
-    private final ComponentMapper<PlayerComponent> playerComponent = ComponentMapper.getFor(PlayerComponent.class);
-    private final ComponentMapper<Box2DComponent> box2DComponent = ComponentMapper.getFor(Box2DComponent.class);
-    private final ComponentMapper<GroundedComponent> groundedComponent = ComponentMapper.getFor(GroundedComponent.class);
-    private final ComponentMapper<TextureComponent> textureComponent = ComponentMapper.getFor(TextureComponent.class);
-    private final ComponentMapper<HealthComponent> healthComponent = ComponentMapper.getFor(HealthComponent.class);
-
     public PlayerStateSystem() {
         super(Family.all(StateComponent.class, PlayerComponent.class,
             GroundedComponent.class, TextureComponent.class).get());
@@ -25,12 +17,12 @@ public class PlayerStateSystem extends IteratingSystem {
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        StateComponent state = stateComponent.get(entity);
-        PlayerComponent player = playerComponent.get(entity);
-        Box2DComponent box2D = box2DComponent.get(entity);
-        GroundedComponent grounded = groundedComponent.get(entity);
-        TextureComponent texture = textureComponent.get(entity);
-        HealthComponent health = healthComponent.get(entity);
+        StateComponent state = ComponentMappers.STATE.get(entity);
+        PlayerComponent player = ComponentMappers.PLAYER.get(entity);
+        Box2DComponent box2D = ComponentMappers.BOX_2D.get(entity);
+        GroundedComponent grounded = ComponentMappers.GROUNDED.get(entity);
+        TextureComponent texture = ComponentMappers.TEXTURE.get(entity);
+        HealthComponent health = ComponentMappers.HEALTH.get(entity);
 
 
         if(player.currentAction == PlayerComponent.Action.DEAD) {

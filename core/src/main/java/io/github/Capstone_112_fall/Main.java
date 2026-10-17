@@ -92,9 +92,11 @@ public class Main extends ScreenAdapter {
         engine.addSystem(new PlayerStateSystem());
         engine.addSystem(new EnemyAISystem(world));
         engine.addSystem(new EnemyStateSystem());
-        engine.addSystem(new AttackSystem(entityManager));
+        engine.addSystem(new KnockbackSystem());
+        engine.addSystem(new DamageSystem());
+        engine.addSystem(new StunSystem());
+        engine.addSystem(new PlayerExtensionSystem(entityManager));
         engine.addSystem(new DodgingSystem(world, camera, atlas));
-        engine.addSystem(new ParrySystem(entityManager));
         engine.addSystem(new HealthSystem());
         engine.addSystem(new SlopeFrictionSystem()); // Pre-step friction adjustments
 

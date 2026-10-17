@@ -19,13 +19,6 @@ public class RenderSystem extends EntitySystem {
     private final OrthographicCamera camera;
     private final ShaderProgram hitShader;
 
-    private final ComponentMapper<TextureComponent> textureMapper = ComponentMapper.getFor(TextureComponent.class);
-    private final ComponentMapper<TransformComponent> transformMapper = ComponentMapper.getFor(TransformComponent.class);
-
-    private final ComponentMapper<AnimationComponent> animationMapper = ComponentMapper.getFor(AnimationComponent.class);
-    private final ComponentMapper<StateComponent> stateMapper = ComponentMapper.getFor(StateComponent.class);
-    private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
-    private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private ImmutableArray<Entity> renderQueue;
     private final TextureAtlas atlas;
 
@@ -56,16 +49,16 @@ public class RenderSystem extends EntitySystem {
             sortedEntities.add(entity);
         }
         sortedEntities.sort((first, second) -> Integer.compare(
-            textureMapper.get(first).zIndex,
-            textureMapper.get(second).zIndex
+            ComponentMappers.TEXTURE.get(first).zIndex,
+            ComponentMappers.TEXTURE.get(second).zIndex
         ));
 
         for(Entity entity : sortedEntities) {
-            TextureComponent texture = textureMapper.get(entity);
-            TransformComponent transform = transformMapper.get(entity);
-            AnimationComponent animation = animationMapper.get(entity);
-            StateComponent state = stateMapper.get(entity);
-            HealthComponent health = healthMapper.get(entity);
+            TextureComponent texture = ComponentMappers.TEXTURE.get(entity);
+            TransformComponent transform = ComponentMappers.TRANSFORM.get(entity);
+            AnimationComponent animation = ComponentMappers.ANIMATION.get(entity);
+            StateComponent state = ComponentMappers.STATE.get(entity);
+            HealthComponent health = ComponentMappers.HEALTH.get(entity);
 
             if(animation != null && state != null && animation.animations.containsKey(state.currentState)) {
                 Animation<TextureRegion> currentAnimation = animation.animations.get(state.currentState);

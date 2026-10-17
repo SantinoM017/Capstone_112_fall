@@ -12,30 +12,11 @@ import java.util.Queue;
 
 // checks for all contacts
 public class PhysicsContactSystem extends EntitySystem implements ContactListener {
-    private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
-    private final ComponentMapper<GroundedComponent> groundedMapper = ComponentMapper.getFor(GroundedComponent.class);
-    private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
-    private final ComponentMapper<DamageComponent> damageMapper = ComponentMapper.getFor(DamageComponent.class);
-    private final ComponentMapper<KnockbackComponent> kbMapper = ComponentMapper.getFor(KnockbackComponent.class);
-    private final ComponentMapper<Box2DComponent> boxMapper = ComponentMapper.getFor(Box2DComponent.class);
+
     private final Vector2 tempVertex = new Vector2(); // Reusable vector to prevent GC allocation
-    private final World world;
-    private final Queue<PendingKnockback> pendingKnockbacks = new ArrayDeque<>();
 
     public PhysicsContactSystem(World world) {
-        this.world = world;
         world.setContactListener(this);
-    }
-
-    @Override
-    public void update(float deltaTime) {
-        if (world.isLocked()) return;
-
-        PendingKnockback pending;
-        while ((pending = pendingKnockbacks.poll()) != null) {
-            pending.health.applyKnockback(
-                pending.target, pending.attacker, pending.health, kbMapper, boxMapper);
-        }
     }
 
     @Override
@@ -88,7 +69,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         Object bodyUserData = footFixture.getBody().getUserData();
         if (bodyUserData instanceof Entity) {
-            GroundedComponent groundedComponent = groundedMapper.get((Entity) bodyUserData);
+            GroundedComponent groundedComponent = ComponentMappers.GROUNDED.get((Entity) bodyUserData);
             if (groundedComponent == null) return;
             if (isBegin) {
                 groundedComponent.groundContacts++;
@@ -119,21 +100,20 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         }
 
         Entity playerEntity = (Entity) bodyUserData;
-        PlayerComponent player = playerMapper.get(playerEntity);
-        HealthComponent health = healthMapper.get(playerEntity);
-        if (player == null || health == null) return;
 
         Entity sensorEntity = (Entity) sensorBodyData;
+        KnockbackComponent kb = ComponentMappers.KNOCKBACK.get(sensorEntity);
+        DamageComponent damage = ComponentMappers.DAMAGE.get(sensorEntity);
 
         String sensorType = sensorTag.toString();
 
         // Dispatch logic based on sensor type string
         switch (sensorType) {
             case "spike":
-                damageSystem(isBegin, health, sensorEntity); return;
+                damageSystem(isBegin, damage, playerEntity); return;
             case "enemy_attackbox":
-                damageSystem(isBegin, health, sensorEntity);
-                setKnockbackState(isBegin, sensorEntity, health);
+                damageSystem(isBegin, damage, playerEntity);
+                setKnockbackState(isBegin, playerEntity, kb);
         }
     }
 
@@ -155,15 +135,10 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         Entity enemy = (Entity) enemyHurtboxFixture.getBody().getUserData();
         Entity player = (Entity) attackFixture.getBody().getUserData();
-        HealthComponent healthComponent = healthMapper.get(enemy);
-        DamageComponent damageComponent = damageMapper.get(player);
-        if(isBegin && healthComponent != null && damageComponent != null) {
-            if (healthComponent.invulnerabilityTimer <= 0f) {
-                pendingKnockbacks.add(new PendingKnockback(enemy, player, healthComponent));
-            }
-            healthComponent.takeDamage(damageComponent.damage);
-            System.out.println(healthComponent.hp);
-        }
+        DamageComponent damageComponent = ComponentMappers.DAMAGE.get(player);
+        KnockbackComponent kb = ComponentMappers.KNOCKBACK.get(player);
+        setKnockbackState(isBegin, enemy, kb);
+        damageSystem(isBegin, damageComponent, enemy);
     }
 
     private void checkParryContact(Fixture fixtureA, Fixture fixtureB, boolean isBegin) {
@@ -184,15 +159,15 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         Entity enemy = (Entity) enemyAttackFixture.getBody().getUserData();
         Entity player = (Entity) parryFixture.getBody().getUserData();
-        HealthComponent healthComponent = healthMapper.get(enemy);
-        DamageComponent damageComponent = damageMapper.get(enemy);
-        if(isBegin){
-            if (healthComponent.invulnerabilityTimer <= 0f) {
-                pendingKnockbacks.add(new PendingKnockback(enemy, player, healthComponent));
-            }
-            healthComponent.takeDamage(damageComponent.damage / 2);
-            System.out.println("parry damage:" + damageComponent.damage / 2);
-            System.out.println(healthComponent.hp);
+        HealthComponent health = ComponentMappers.HEALTH.get(enemy);
+        DamageComponent damage = ComponentMappers.DAMAGE.get(enemy);
+        KnockbackComponent kb = ComponentMappers.KNOCKBACK.get(player);
+        StunComponent stun = ComponentMappers.STUN.get(player);
+        setKnockbackState(isBegin, enemy, kb);
+        if(isBegin) {
+            damage.takeDamage(damage.damage, health);
+            stun.applyStun = true;
+            stun.stunnedEntity = enemy;
         }
     }
 
@@ -233,7 +208,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         // 1. Drop-Through Check
         Object entityData = playerBody.getUserData();
         if (entityData instanceof Entity) {
-            PlayerComponent player = playerMapper.get((Entity) entityData);
+            PlayerComponent player = ComponentMappers.PLAYER.get((Entity) entityData);
             if (player != null && player.isDroppingThrough) {
                 contact.setEnabled(false);
                 return;
@@ -282,37 +257,24 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         return body.getPosition().y;
     }
 
-    private void damageSystem(boolean isBegin, HealthComponent healthComponent, Entity takingDamageFrom) {
+    private void damageSystem(boolean isBegin, DamageComponent damage, Entity affectedEntity) {
         if(isBegin) {
-            healthComponent.isTakingDamage = true;
-            healthComponent.takingDamageFrom = takingDamageFrom;
+            damage.applyDamage = true;
+            damage.dealingDamageTo = affectedEntity;
         } else {
-            healthComponent.isTakingDamage = false;
-            healthComponent.takingDamageFrom = null;
+            damage.applyDamage = false;
+            damage.dealingDamageTo = null;
         }
     }
 
-    private void setKnockbackState(boolean isBegin, Entity hazard, HealthComponent health) {
+    private void setKnockbackState(boolean isBegin, Entity afffectedEntity, KnockbackComponent kb) {
         if(isBegin) {
-            health.isTakingKnockback = true;
-            health.takingKnockbackFrom = hazard;
-            System.out.println("start kb");
+            kb.applyKnockback = true;
+            kb.dealingKnockbackTo = afffectedEntity;
         } else {
-            health.isTakingKnockback = false;
-            health.takingKnockbackFrom = null;
-            System.out.println("end kb");
+            kb.applyKnockback = false;
+            kb.dealingKnockbackTo = null;
         }
     }
 
-    private static class PendingKnockback {
-        private final Entity target;
-        private final Entity attacker;
-        private final HealthComponent health;
-
-        private PendingKnockback(Entity target, Entity attacker, HealthComponent health) {
-            this.target = target;
-            this.attacker = attacker;
-            this.health = health;
-        }
-    }
 }

@@ -1,18 +1,17 @@
 package io.github.Capstone_112_fall.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
 import io.github.Capstone_112_fall.components.PlayerComponent;
+import io.github.Capstone_112_fall.components.ComponentMappers;
 import io.github.Capstone_112_fall.components.TransformComponent;
 
 // operates the camera that follows the player
 public class CameraSystem extends IteratingSystem {
     private final OrthographicCamera camera;
-    private final ComponentMapper<TransformComponent> transformMapper = ComponentMapper.getFor(TransformComponent.class);
     private float minX, minY, maxX, maxY;
 
     // camera follows player
@@ -34,7 +33,7 @@ public class CameraSystem extends IteratingSystem {
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        TransformComponent transform = transformMapper.get(entity);
+        TransformComponent transform = ComponentMappers.TRANSFORM.get(entity);
         if(transform == null) return;
 
         // where the player is

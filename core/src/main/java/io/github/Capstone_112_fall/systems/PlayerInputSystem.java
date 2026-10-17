@@ -1,6 +1,5 @@
 package io.github.Capstone_112_fall.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
@@ -13,6 +12,7 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.WorldManifold;
 import io.github.Capstone_112_fall.components.Box2DComponent;
+import io.github.Capstone_112_fall.components.ComponentMappers;
 import io.github.Capstone_112_fall.components.GroundedComponent;
 import io.github.Capstone_112_fall.components.HealthComponent;
 import io.github.Capstone_112_fall.components.PlayerComponent;
@@ -22,21 +22,16 @@ public class PlayerInputSystem extends IteratingSystem {
     private static final float MAX_SLOPE_SPEED_MULTIPLIER = 1.30f;
     private static final float JUMP_VELOCITY = 4.0f; // Set explicit upward launch velocity (m/s)
 
-    private final ComponentMapper<Box2DComponent> box2DComponent = ComponentMapper.getFor(Box2DComponent.class);
-    private final ComponentMapper<PlayerComponent> playerComponent = ComponentMapper.getFor(PlayerComponent.class);
-    private final ComponentMapper<GroundedComponent> groundedComponent = ComponentMapper.getFor(GroundedComponent.class);
-    private final ComponentMapper<HealthComponent> healthComponent = ComponentMapper.getFor(HealthComponent.class);
-
     public PlayerInputSystem() {
         super(Family.all(Box2DComponent.class, PlayerComponent.class).get());
     }
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        Box2DComponent box2D = box2DComponent.get(entity);
-        PlayerComponent player = playerComponent.get(entity);
-        GroundedComponent grounded = groundedComponent.get(entity);
-        HealthComponent health = healthComponent.get(entity);
+        Box2DComponent box2D = ComponentMappers.BOX_2D.get(entity);
+        PlayerComponent player = ComponentMappers.PLAYER.get(entity);
+        GroundedComponent grounded = ComponentMappers.GROUNDED.get(entity);
+        HealthComponent health = ComponentMappers.HEALTH.get(entity);
 
         if(health != null && health.hitStunTimer > 0) {
             return;
@@ -103,17 +98,17 @@ public class PlayerInputSystem extends IteratingSystem {
         player.attackCooldown = Math.max(0f, player.attackCooldown - deltaTime);
         if ((Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) && player.attackCooldown <= 0f) {
             player.setAction(PlayerComponent.Action.ATTACKING, 0.5f);
-            if(player.currentAction == PlayerComponent.Action.ATTACKING) player.attackCooldown = 0.5f;
         }
 
         player.actionTime = Math.max(0f, player.actionTime - deltaTime);
-        if ((Gdx.input.isKeyJustPressed(Input.Keys.Q) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) && player.actionTime <= 0f) {
+        if ((Gdx.input.isKeyJustPressed(Input.Keys.Q) || Gdx.input.isButtonJustPressed(Input.Buttons.FORWARD)) && player.actionTime <= 0f) {
             player.setAction(PlayerComponent.Action.DODGING, 5f);
         }
 
         player.actionTime = Math.max(0f, player.actionTime - deltaTime);
-        if ((Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isButtonJustPressed(Input.Buttons.FORWARD)) && player.actionTime <= 0f) {
-            player.setAction(PlayerComponent.Action.PARRY, 5f);
+        if ((Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) && player.actionTime <= 0f) {
+            player.resetAction();
+            player.setAction(PlayerComponent.Action.PARRY, 2f);
         }
 
 

@@ -40,7 +40,7 @@ public class AnimationFactory {
         );
         animComp.animations.put(
             StateComponent.State.ATTACKING,
-            createAnimation("character_attack", 0.125f, Animation.PlayMode.NORMAL)
+            createAnimation("character_attack", 0.1f, Animation.PlayMode.NORMAL)
         );
         animComp.animations.put(
             StateComponent.State.HURT,

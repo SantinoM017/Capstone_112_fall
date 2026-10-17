@@ -1,6 +1,5 @@
 package io.github.Capstone_112_fall.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
@@ -13,11 +12,6 @@ import io.github.Capstone_112_fall.utils.EnemyBodyBounds;
 public class EnemyAISystem extends IteratingSystem {
     private final World world;
 
-    private final ComponentMapper<EnemyComponent> enemyMapper = ComponentMapper.getFor(EnemyComponent.class);
-    private final ComponentMapper<Box2DComponent> box2dMapper = ComponentMapper.getFor(Box2DComponent.class);
-    private final ComponentMapper<HealthComponent> healthMapper = ComponentMapper.getFor(HealthComponent.class);
-    private final ComponentMapper<TextureComponent> textureMapper = ComponentMapper.getFor(TextureComponent.class);
-    private final ComponentMapper<PlayerComponent> playerMapper = ComponentMapper.getFor(PlayerComponent.class);
     private final Vector2 halfExtents = new Vector2();
     private final Vector2 tempVertex = new Vector2();
 
@@ -28,10 +22,10 @@ public class EnemyAISystem extends IteratingSystem {
 
     @Override
     protected void processEntity(Entity entity, float deltaTime) {
-        EnemyComponent enemy = enemyMapper.get(entity);
-        Box2DComponent box2d = box2dMapper.get(entity);
-        HealthComponent health = healthMapper.get(entity);
-        TextureComponent texture = textureMapper.get(entity);
+        EnemyComponent enemy = ComponentMappers.ENEMY.get(entity);
+        Box2DComponent box2d = ComponentMappers.BOX_2D.get(entity);
+        HealthComponent health = ComponentMappers.HEALTH.get(entity);
+        TextureComponent texture = ComponentMappers.TEXTURE.get(entity);
 
         if (box2d == null || box2d.body == null) return;
 
@@ -71,7 +65,7 @@ public class EnemyAISystem extends IteratingSystem {
             return;
         }
 
-        Box2DComponent playerB2d = box2dMapper.get(playerEntity);
+        Box2DComponent playerB2d = ComponentMappers.BOX_2D.get(playerEntity);
         if (playerB2d == null || playerB2d.body == null) {
             enemy.aiState = EnemyComponent.AIState.PATROL;
             return;
@@ -82,7 +76,7 @@ public class EnemyAISystem extends IteratingSystem {
 
         float dist = enemyPos.dst(playerPos);
 
-        PlayerComponent playerComp = playerMapper.get(playerEntity);
+        PlayerComponent playerComp = ComponentMappers.PLAYER.get(playerEntity);
         if (dist <= enemy.detectionRange && playerComp.currentAction != PlayerComponent.Action.DEAD) {
             enemy.aiState = EnemyComponent.AIState.CHASE;
 
@@ -238,28 +232,6 @@ public class EnemyAISystem extends IteratingSystem {
             || "static_block".equals(userData)
             || "slope".equals(userData)
             || "one_way_platform".equals(userData);
-    }
-
-    private float getBodyHalfHeight(Body body) {
-        float halfHeight = 0.5f; // Safe fallback value (0.5m)
-        float maxAbsY = 0f;
-
-        for (Fixture fixture : body.getFixtureList()) {
-            if (fixture.isSensor()) continue; // Ignore attackboxes/hurtboxes
-
-            if (fixture.getShape() instanceof PolygonShape) {
-                PolygonShape shape = (PolygonShape) fixture.getShape();
-                for (int i = 0; i < shape.getVertexCount(); i++) {
-                    shape.getVertex(i, tempVertex);
-                    maxAbsY = Math.max(maxAbsY, Math.abs(tempVertex.y));
-                }
-            } else if (fixture.getShape() instanceof CircleShape) {
-                CircleShape shape = (CircleShape) fixture.getShape();
-                maxAbsY = Math.max(maxAbsY, Math.abs(shape.getPosition().y) + shape.getRadius());
-            }
-        }
-
-        return maxAbsY > 0f ? maxAbsY : halfHeight;
     }
 
     private float getBodyHalfWidth(Body body) {
