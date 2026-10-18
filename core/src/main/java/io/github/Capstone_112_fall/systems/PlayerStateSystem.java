@@ -10,6 +10,7 @@ import io.github.Capstone_112_fall.components.*;
 
 // updates player state based on velocity and grounded status
 public class PlayerStateSystem extends IteratingSystem {
+    private float keyTimer = 0f;
     public PlayerStateSystem() {
         super(Family.all(StateComponent.class, PlayerComponent.class,
             GroundedComponent.class, TextureComponent.class).get());
@@ -38,18 +39,26 @@ public class PlayerStateSystem extends IteratingSystem {
             return;
         }
 
+        if(Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.A)) {
+            keyTimer += deltaTime;
+        } else {
+            keyTimer = 0f;
+        }
+
         if(box2D.body == null) return;
 
         Vector2 velocity = box2D.body.getLinearVelocity();
 
         // flip texture based on key input
         if(player.currentAction == PlayerComponent.Action.NA) {
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-                texture.flipX = false;
-                player.isFlipped = false;
-            } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-                texture.flipX = true;
-                player.isFlipped = true;
+            if(keyTimer >= 0.2f) {
+                if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+                    texture.flipX = false;
+                    player.isFlipped = false;
+                } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+                    texture.flipX = true;
+                    player.isFlipped = true;
+                }
             }
         }
 

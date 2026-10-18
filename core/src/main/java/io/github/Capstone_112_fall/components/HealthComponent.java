@@ -12,8 +12,9 @@ public class HealthComponent implements Component {
     public int hp;
     public int maxHp;
     public float invulnerabilityTimer;
-    public final float invulnerabilityDuration = 0.4f;
+    public final float invulnerabilityDuration = 0.5f;
     public float hitStunTimer;
     public final float hitStunDuration = 0.2f;
     public float knockbackResistance;
 }
+

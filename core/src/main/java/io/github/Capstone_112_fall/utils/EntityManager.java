@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import io.github.Capstone_112_fall.ai_behaviors.SlimeBehavior;
+import io.github.Capstone_112_fall.ai_behaviors.SlimeBossBehavior;
 import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.Main;
 
@@ -340,6 +341,8 @@ public class EntityManager {
                 float chaseSpeed = hurtboxData.properties.get("chaseSpeed", 1.0f, float.class);
                 float offset = hurtboxData.properties.get("offset", 0.1f, float.class);
                 enemyComp.behavior = new SlimeBehavior(walkSpeed, chaseSpeed, offset);
+            case "slime_boss":
+                enemyComp.behavior = new SlimeBossBehavior();
             default: break;
         }
         enemyComp.detectionRange = detectionRange;

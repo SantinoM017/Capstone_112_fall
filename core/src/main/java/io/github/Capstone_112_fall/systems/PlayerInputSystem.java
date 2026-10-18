@@ -105,7 +105,6 @@ public class PlayerInputSystem extends IteratingSystem {
             player.setAction(PlayerComponent.Action.DODGING, 5f);
         }
 
-        player.actionTime = Math.max(0f, player.actionTime - deltaTime);
         if ((Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) && player.actionTime <= 0f) {
             player.resetAction();
             player.setAction(PlayerComponent.Action.PARRY, 2f);

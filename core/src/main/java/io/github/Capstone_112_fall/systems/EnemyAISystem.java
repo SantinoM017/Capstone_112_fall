@@ -33,7 +33,7 @@ public class EnemyAISystem extends IteratingSystem {
         if (box2d.temporarilyDynamicFromKinematic) {
             checkAndRevertKinematicState(box2d);
             if (box2d.temporarilyDynamicFromKinematic) {
-                enemy.aiState = EnemyComponent.AIState.STUNNED;
+//                enemy.aiState = EnemyComponent.AIState.STUNNED;
                 return;
             }
         }

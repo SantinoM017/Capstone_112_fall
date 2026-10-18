@@ -204,7 +204,7 @@
     <property name="detectionRange" type="float" value="3"/>
     <property name="entityID" value="slime_1"/>
     <property name="entityType" value="slime"/>
-    <property name="hp" type="int" value="200"/>
+    <property name="hp" type="int" value="100"/>
     <property name="property" value="entity_hurtbox"/>
    </properties>
   </object>
@@ -222,7 +222,7 @@
     <property name="detectionRange" type="float" value="0"/>
     <property name="entityID" value="slime_2"/>
     <property name="entityType" value="slime"/>
-    <property name="hp" type="int" value="200"/>
+    <property name="hp" type="int" value="100"/>
     <property name="property" value="entity_hurtbox"/>
    </properties>
   </object>
@@ -240,8 +240,8 @@
     <property name="chaseSpeed" type="float" value="1.5"/>
     <property name="detectionRange" type="float" value="8"/>
     <property name="entityID" value="slime_3"/>
-    <property name="entityType" value="slime_custom"/>
-    <property name="hp" type="int" value="400"/>
+    <property name="entityType" value="slime_boss"/>
+    <property name="hp" type="int" value="200"/>
     <property name="kbRes" type="float" value="0.5"/>
     <property name="property" value="entity_hurtbox"/>
    </properties>
