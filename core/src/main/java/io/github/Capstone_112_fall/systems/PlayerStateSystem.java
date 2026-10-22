@@ -51,7 +51,7 @@ public class PlayerStateSystem extends IteratingSystem {
 
         // flip texture based on key input
         if(player.currentAction == PlayerComponent.Action.NA) {
-            if(keyTimer >= 0.2f) {
+            if(keyTimer >= 0.05f) {
                 if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                     texture.flipX = false;
                     player.isFlipped = false;

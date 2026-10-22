@@ -36,8 +36,8 @@ public class Main extends ScreenAdapter {
     private TextureAtlas atlas;
 
     // viewport size
-    private static final float V_WIDTH = 20;
-    private static final float V_HEIGHT = 10f;
+    private static final float V_WIDTH = 24;
+    private static final float V_HEIGHT = 13.5f;
 
     public Main(MainScreen game) {
         this.game = game;
@@ -49,7 +49,6 @@ public class Main extends ScreenAdapter {
         camera = new OrthographicCamera();
         viewport = new FitViewport(V_WIDTH, V_HEIGHT, camera); // adjusts viewport based on screen size
         viewport.apply();
-        camera.position.set(V_WIDTH/2, V_HEIGHT/2, 0); // centers camera to middle of viewport
         camera.setToOrtho(false, V_WIDTH, V_HEIGHT); // set the camera size
         // handles camera movement
         CameraSystem cameraSystem = new CameraSystem(camera);
@@ -80,7 +79,6 @@ public class Main extends ScreenAdapter {
         int tileHeight = map.getProperties().get("tileheight", Integer.class);
         float mapWidth = mapWidthTiles * tileWidth / PPM;
         float mapHeight = mapHeightTiles * tileHeight / PPM;
-        Entity playerEntity = entityManager.createPlayerEntity(mapWidth / 2f, mapHeight / 2f);
         entityManager.createMapSideBoundaries(mapWidth, mapHeight);
 
         // Ashley setup
@@ -125,7 +123,6 @@ public class Main extends ScreenAdapter {
         ScreenUtils.clear(1f, 1f, 0.7f, 1f); // refresh the screen
         world.step(1/60f, 6, 2); // advance the physics simulation
         engine.update(delta); // runs the engine
-        camera.update(); // update the camera
         mapRenderer.setView(camera);
         mapRenderer.render();
         debugRenderer.render(world, camera.combined);

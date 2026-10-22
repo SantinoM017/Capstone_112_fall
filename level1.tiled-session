@@ -1,10 +1,10 @@
 {
     "activeFile": "assets/levels/level1.tmx",
     "expandedProjectPaths": [
+        ".idea",
         "assets/levels",
-        "assets",
         ".",
-        ".idea"
+        "assets"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -82,13 +82,15 @@
         },
         "assets/levels/level1.tmx": {
             "expandedObjectLayers": [
+                3,
+                4,
                 2
             ],
-            "scale": 5.5,
-            "selectedLayer": 3,
+            "scale": 4,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 685.3636363636364,
-                "y": 89.36363636363637
+                "x": 1312.375,
+                "y": 115.125
             }
         },
         "assets/levels/pipe.tsx": {
@@ -102,14 +104,26 @@
         "assets/levels/spike.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "assets/levels/test.tmx": {
+            "expandedObjectLayers": [
+                5,
+                2
+            ],
+            "scale": 4,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 538.625,
+                "y": 102.625
+            }
         }
     },
     "last.imagePath": "C:/Users/San20/Downloads/Capstone_112_fall/assets/raw_images/blue_slime",
-    "map.height": 15,
+    "map.height": 30,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,
-    "map.width": 25,
+    "map.width": 70,
     "openFiles": [
         "assets/levels/level1.tmx",
         "assets/levels/Building1.tsx",
@@ -117,11 +131,13 @@
         "assets/levels/Building3.tsx",
         "assets/levels/Tree 48x64.tsx",
         "assets/levels/16x16 tiles.tsx",
-        "assets/levels/32x16 tiles.tsx"
+        "assets/levels/32x16 tiles.tsx",
+        "assets/levels/test.tmx"
     ],
     "project": "level1.tiled-project",
-    "property.type": "string",
+    "property.type": "bool",
     "recentFiles": [
+        "assets/levels/test.tmx",
         "assets/levels/32x16 tiles.tsx",
         "assets/levels/16x16 tiles.tsx",
         "assets/levels/Tree 48x64.tsx",
@@ -132,8 +148,7 @@
         "assets/levels/32x32.tsx",
         "assets/levels/16x16 Tiles.tsx",
         "assets/levels/AssetSheet_Pink.tsx",
-        "assets/levels/blocks2.tsx",
-        "assets/levels/8. Samurai Village & Wooden Structures.tsx"
+        "assets/levels/blocks2.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

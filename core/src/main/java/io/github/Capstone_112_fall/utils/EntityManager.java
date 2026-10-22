@@ -13,8 +13,6 @@ import io.github.Capstone_112_fall.ai_behaviors.SlimeBossBehavior;
 import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.Main;
 
-import java.util.Properties;
-
 
 // creates entities and adds components to them
 public class EntityManager {
@@ -32,7 +30,7 @@ public class EntityManager {
         this.world = world;
     }
 
-    public Entity createPlayerEntity(float x, float y) {
+    public void createPlayerEntity(float x, float y) {
         Entity player = engine.createEntity();
         Body body = createPlayer(x, y);
 
@@ -67,7 +65,6 @@ public class EntityManager {
 
         body.setUserData(player);
         engine.addEntity(player);
-        return player;
     }
 
     // Written by Claude (Anthropic AI assistant)
@@ -83,7 +80,9 @@ public class EntityManager {
         for (MapEntityData d : data) {
             String property = d.properties.get("property", "", String.class);
 
-            if ("entity_hurtbox".equals(property)) {
+            if("spawn".equals(property)) {
+                createPlayerEntity(d.x, d.y);
+            } else if ("entity_hurtbox".equals(property)) {
                 // Defer hitboxes until all parent entities are created
                 hurtboxDataMap.put(d.entityID, d);
             } else if ("entity_attackbox".equals(property)){
