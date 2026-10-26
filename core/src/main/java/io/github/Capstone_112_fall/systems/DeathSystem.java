@@ -15,10 +15,13 @@ import io.github.Capstone_112_fall.components.QueueForDestructionComponent;
 public class DeathSystem extends IteratingSystem {
     private final MainScreen game;
     private final World world;
-    public DeathSystem(MainScreen game, World world){
+    private final String levelPath;
+
+    public DeathSystem(MainScreen game, World world, String levelPath) {
         super(Family.all(PlayerComponent.class, Box2DComponent.class, QueueForDestructionComponent.class).get());
         this.game = game;
         this.world = world;
+        this.levelPath = levelPath;
     }
 
     @Override
@@ -37,7 +40,7 @@ public class DeathSystem extends IteratingSystem {
             // Destroy the body and all attached fixtures from the Box2D world
             world.destroyBody(box2d.body);
             box2d.body = null;
-            game.setScreen(new Main(game));
+            game.setScreen(new Main(game, levelPath));
         }
 
     }

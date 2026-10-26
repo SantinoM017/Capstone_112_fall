@@ -130,7 +130,7 @@ public class DodgingSystem extends IteratingSystem {
     private boolean isStaticTerrain(Fixture fixture) {
         Object userData = fixture.getUserData();
         return "ground".equals(userData) || "static_block".equals(userData)
-            || "wall".equals(userData) || "slope".equals(userData);
+            || "wall".equals(userData) || "slope".equals(userData) || "player_barrier".equals(userData);
     }
 
     private float getBodyHalfWidth(Body body) {

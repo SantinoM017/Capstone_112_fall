@@ -1,10 +1,10 @@
 {
     "activeFile": "assets/levels/level1.tmx",
     "expandedProjectPaths": [
+        "assets",
         ".idea",
         "assets/levels",
-        ".",
-        "assets"
+        "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -83,14 +83,26 @@
         "assets/levels/level1.tmx": {
             "expandedObjectLayers": [
                 3,
-                4,
+                2,
+                4
+            ],
+            "scale": 4,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 1361.125,
+                "y": 160.875
+            }
+        },
+        "assets/levels/level2.tmx": {
+            "expandedObjectLayers": [
+                3,
                 2
             ],
             "scale": 4,
-            "selectedLayer": 1,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 1312.375,
-                "y": 115.125
+                "x": 405.375,
+                "y": 320.875
             }
         },
         "assets/levels/pipe.tsx": {
@@ -107,13 +119,13 @@
         },
         "assets/levels/test.tmx": {
             "expandedObjectLayers": [
-                5,
-                2
+                2,
+                5
             ],
             "scale": 4,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 538.625,
+                "x": 353.375,
                 "y": 102.625
             }
         }
@@ -135,7 +147,7 @@
         "assets/levels/test.tmx"
     ],
     "project": "level1.tiled-project",
-    "property.type": "bool",
+    "property.type": "int",
     "recentFiles": [
         "assets/levels/test.tmx",
         "assets/levels/32x16 tiles.tsx",

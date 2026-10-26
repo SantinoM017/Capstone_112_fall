@@ -33,6 +33,15 @@ public class DestroyEntitySystem extends IteratingSystem {
         }
 
         if(qd.destructionTimer <= 0) {
+            for (Entity barrier : getEngine().getEntitiesFor(
+                Family.all(PlayerBarrierComponent.class).get()
+            )) {
+                PlayerBarrierComponent playerBarrier = ComponentMappers.PLAYER_BARRIER.get(barrier);
+                if (playerBarrier.key == entity) {
+                    playerBarrier.key = null;
+                }
+            }
+
             // 2. Remove the entity from the Ashley Engine
             getEngine().removeEntity(entity);
         }

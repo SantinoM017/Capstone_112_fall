@@ -53,6 +53,7 @@ This project has used AI tools and agents to assist in the development of this p
     - Ran out of inline suggestion on 10/07/2026
     - Fixed a bug that made player attack hitboxes change player mass
     - Change kinematic enemies to dynamic enemies if they are knock backed
+    - Created most of the UI screens
 - Claude (built-in Agent):
     - Used to generate code or provide suggestions.
     - Used to refactor large/complex parts of the codebase.
@@ -85,5 +86,25 @@ Important prompts:
 
     Please provide the updated `knockbackSystem` code and the new reversion logic with the Box2D raycast callback.
     (prompt created by Gemini sent to CoPilot)
-- ok im thinking of adding a dodging/teleport system. My train of thought is in DodgeSystem when the player dodges a raycast is sent to the mouse if any physical/static object is detected it'll teleport to the object instead of teleporting through it but it'll let the player dodge through entities (gemini)
+- Please refactor `LevelSelectScreen`, update level progression persistence, and implement a new `MainMenuScreen` for my 2D LibGDX / Ashley platformer project according to the following requirements:
+
+1. Level Path Routing in LevelSelectScreen:
+    - Update `LevelSelectScreen` so clicking an unlocked level button launches the game with that specific stage.
+    - Pass the selected map path (e.g., "maps/level_1.tmx", "maps/level_2.tmx") directly into the `Main` game screen constructor (`new Main(game, levelPath)`).
+
+2. Level Progression Persistence via Preferences:
+    - Create or integrate a dedicated `SaveManager` utility class using LibGDX `Gdx.app.getPreferences("MyGameSaveData")`.
+    - Store the highest unlocked level index (defaulting to level 1).
+    - In `LevelSelectScreen`, read this value dynamically so `UNLOCKED_LEVELS` reflects actual saved progress.
+    - Add a static method `unlockNextLevel(int completedLevel)` to update and flush preferences when a level is cleared.
+
+3. MainMenuScreen Implementation:
+    - Create a new `MainMenuScreen` implementing LibGDX `Screen` using Scene2D (`Stage` and `FitViewport(800, 480)`).
+    - Include the following menu options styled with my existing `Skin`:
+        * "Play" / "Select Level": Navigates to `LevelSelectScreen`.
+        * "Reset Progress": Resets saved level preferences back to level 1 (with a brief confirmation popup/dialog or toggle state) and flushes `Preferences`.
+        * "Exit": Calls `Gdx.app.exit()`.
+    - Provide a "Back" button on `LevelSelectScreen` that returns to `MainMenuScreen`.
+
+Ensure all Scene2D Label font scales call `.invalidate()` to fix bounds alignment, and keep color styles isolated to prevent TextButtonStyle mutation bugs. (written by gemini sent to copilot)
 

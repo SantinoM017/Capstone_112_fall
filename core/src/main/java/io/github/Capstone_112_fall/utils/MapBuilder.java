@@ -140,5 +140,5 @@ public class MapBuilder {
     private static String getType(MapProperties props) {
         return props.get("type", DEFAULT_TYPE, String.class);
     }
-    private static String getEntityID(MapProperties props) { return props.get("entityID", "", String.class); }
+    private static int getEntityID(MapProperties props) { return props.get("entityID", 0, Integer.class); }
 }

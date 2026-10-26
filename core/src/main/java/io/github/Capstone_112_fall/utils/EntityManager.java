@@ -72,39 +72,62 @@ public class EntityManager {
     // creates entities from the values read by MapBuilder
     public void createMapEntities(Array<MapEntityData> data) {
         // Stores created visual Ashley Entities keyed by entityID
-        ObjectMap<String, Entity> pendingEntities = new ObjectMap<>();
-        ObjectMap<String, MapEntityData> hurtboxDataMap = new ObjectMap<>();
-        ObjectMap<String, MapEntityData> attackboxDataMap = new ObjectMap<>();
+        ObjectMap<Integer, Entity> pendingEntities = new ObjectMap<>();
+        ObjectMap<Integer, PlayerBarrierComponent> pendingBarriers = new ObjectMap<>();
+        ObjectMap<Integer, MapEntityData> hurtboxDataMap = new ObjectMap<>();
+        ObjectMap<Integer, MapEntityData> attackboxDataMap = new ObjectMap<>();
 
         // PASS 1: Instantiate visual/logical entities (No Box2D bodies yet)
         for (MapEntityData d : data) {
             String property = d.properties.get("property", "", String.class);
 
-            if("spawn".equals(property)) {
-                createPlayerEntity(d.x, d.y);
-            } else if ("entity_hurtbox".equals(property)) {
-                // Defer hitboxes until all parent entities are created
-                hurtboxDataMap.put(d.entityID, d);
-            } else if ("entity_attackbox".equals(property)){
-                attackboxDataMap.put(d.entityID, d);
-            } else if (!d.entityID.isEmpty() && "entity".equals(property)) {
-                // Create visual Ashley entity and register in map
-                Entity entity = createMapEntity(d);
-                pendingEntities.put(d.entityID, entity);
-            } else {
-                // Standard static blocks, slopes, decorations, etc.
-                createMapEntity(d);
+            switch (property != null ? property : "") {
+                case "spawn":
+                    createPlayerEntity(d.x, d.y);
+                    break;
+
+                case "entity_hurtbox":
+                    // Defer hitboxes until all parent entities are created
+                    hurtboxDataMap.put(d.entityID, d);
+                    break;
+
+                case "entity_attackbox":
+                    attackboxDataMap.put(d.entityID, d);
+                    break;
+
+                case "playerBarrier":
+                    Entity barrier = createMapEntity(d);
+                    pendingBarriers.put(d.entityID, ComponentMappers.PLAYER_BARRIER.get(barrier));
+                    break;
+
+                case "entity":
+                    if (d.entityID != 0) {
+                        // Create visual Ashley entity and register in map
+                        Entity entity = createMapEntity(d);
+                        pendingEntities.put(d.entityID, entity);
+                        break;
+                    }
+                    // If entityID == 0, fall through to default behavior
+
+                default:
+                    // Standard static blocks, slopes, decorations, etc.
+                    createMapEntity(d);
+                    break;
             }
         }
 
         // PASS 2: Parse Hitboxes & Attach Box2D Bodies directly to pending Entities
-        for (ObjectMap.Entry<String, Entity> entry : pendingEntities) {
-            String entityID = entry.key;
+        for (ObjectMap.Entry<Integer, Entity> entry : pendingEntities) {
+            Integer entityID = entry.key;
             Entity parentEntity = entry.value;
             MapEntityData hurtboxData = hurtboxDataMap.get(entityID);
             MapEntityData attackboxData = attackboxDataMap.get(entityID);
 
             createEnemy(parentEntity, hurtboxData, attackboxData);
+        }
+
+        for (ObjectMap.Entry<Integer, PlayerBarrierComponent> entry : pendingBarriers) {
+            entry.value.key = pendingEntities.get(entry.value.entityID);
         }
     }
 
@@ -402,6 +425,13 @@ public class EntityManager {
                 createDamageComponent(block, damage); break;
             case "entity": fixture.setUserData("entity"); break;
             case "entityBarrier": fixture.setUserData("entity_barrier"); break;
+            case "objective": fixture.setUserData("objective"); break;
+            case "playerBarrier": fixture.setUserData("player_barrier");
+                PlayerBarrierComponent pb = engine.createComponent(PlayerBarrierComponent.class);
+                pb.entityID = data.entityID;
+                block.add(pb);
+                break;
+            case "checkpoint": fixture.setUserData("checkpoint"); break;
             default: fixture.setUserData("static_block"); break;
         }
         shape.dispose();

@@ -1,12 +1,23 @@
 package io.github.Capstone_112_fall.Screens;
 
 import com.badlogic.gdx.Game;
-import io.github.Capstone_112_fall.Main;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 public class MainScreen extends Game {
+    private Skin skin;
+    private TextureAtlas uiAtlas;
+
     @Override
     public void create() {
-        setScreen(new Main(this));
+        uiAtlas = new TextureAtlas(Gdx.files.internal("ui.atlas"));
+        skin = new Skin(Gdx.files.internal("ui.json"), uiAtlas);
+        setScreen(new MainMenuScreen(this));
+    }
+
+    public Skin getSkin() {
+        return skin;
     }
 
     @Override
@@ -17,5 +28,7 @@ public class MainScreen extends Game {
     @Override
     public void dispose() {
         if(screen != null) screen.dispose();
+        if(skin != null) skin.dispose();
+        if(uiAtlas != null) uiAtlas.dispose();
     }
 }

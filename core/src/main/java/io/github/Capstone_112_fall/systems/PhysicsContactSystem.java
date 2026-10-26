@@ -83,8 +83,8 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
     private void checkSensorContact(Fixture fixtureA, Fixture fixtureB, boolean isBegin) {
         Fixture playerFixture = isPlayerBodyFixture(fixtureA) ? fixtureA
             : isPlayerBodyFixture(fixtureB) ? fixtureB : null;
-        Fixture sensorFixture = isDamageSensor(fixtureA) ? fixtureA
-            : isDamageSensor(fixtureB) ? fixtureB : null;
+        Fixture sensorFixture = fixtureA.isSensor() ? fixtureA
+            : fixtureB.isSensor() ? fixtureB : null;
 
         // Both a valid player fixture and a sensor fixture must be present
         if (playerFixture == null || sensorFixture == null) {
@@ -95,17 +95,20 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         Object sensorBodyData = sensorFixture.getBody().getUserData();
         Object bodyUserData = playerFixture.getBody().getUserData();
 
-        if (!(sensorBodyData instanceof Entity) || !(bodyUserData instanceof Entity)) {
+        if (!(sensorTag instanceof String)
+            || !(sensorBodyData instanceof Entity)
+            || !(bodyUserData instanceof Entity)) {
             return;
         }
 
         Entity playerEntity = (Entity) bodyUserData;
+        PlayerComponent player = ComponentMappers.PLAYER.get(playerEntity);
 
         Entity sensorEntity = (Entity) sensorBodyData;
         KnockbackComponent kb = ComponentMappers.KNOCKBACK.get(sensorEntity);
         DamageComponent damage = ComponentMappers.DAMAGE.get(sensorEntity);
 
-        String sensorType = sensorTag.toString();
+        String sensorType = (String) sensorTag;
 
         // Dispatch logic based on sensor type string
         switch (sensorType) {
@@ -114,6 +117,9 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
             case "enemy_attackbox":
                 damageSystem(isBegin, damage, playerEntity);
                 setKnockbackState(isBegin, playerEntity, kb);
+                return;
+            case "objective":
+                player.completedLevel = true;
         }
     }
 
@@ -171,22 +177,7 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
         }
     }
 
-    private boolean isPlayerFixture(Fixture fixture) {
-        Object tag = fixture.getUserData();
-        return "player_body".equals(tag)
-            || "player_foot".equals(tag)
-            || "player_slope_fixture".equals(tag);
-    }
 
-    private boolean isPlayerBodyFixture(Fixture fixture) {
-        Object tag = fixture.getUserData();
-        return "player_body".equals(tag) || "player_slope_fixture".equals(tag);
-    }
-
-    private boolean isDamageSensor(Fixture fixture) {
-        Object tag = fixture.getUserData();
-        return "spike".equals(tag) || ("enemy_attackbox".equals(tag) && fixture.isSensor());
-    }
 
     private void checkOneWayPlatform(Contact contact, Fixture fixtureA, Fixture fixtureB) {
         // Match player body/foot fixtures against one-way platforms
@@ -275,6 +266,18 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
             kb.applyKnockback = false;
             kb.dealingKnockbackTo = null;
         }
+    }
+
+    private boolean isPlayerFixture(Fixture fixture) {
+        Object tag = fixture.getUserData();
+        return "player_body".equals(tag)
+            || "player_foot".equals(tag)
+            || "player_slope_fixture".equals(tag);
+    }
+
+    private boolean isPlayerBodyFixture(Fixture fixture) {
+        Object tag = fixture.getUserData();
+        return "player_body".equals(tag) || "player_slope_fixture".equals(tag);
     }
 
 }

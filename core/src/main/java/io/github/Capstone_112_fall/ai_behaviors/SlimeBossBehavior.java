@@ -41,14 +41,16 @@ public class SlimeBossBehavior implements EnemyBehavior {
         // 1. Edge Detection: Turn around if approaching a drop-off
         boolean groundAhead = checkGroundAhead(world, body, enemy.facingRight, probeOffset, halfExtents.y);
         boolean wallAhead = checkWallAhead(world, body, enemy.facingRight, probeOffset, halfExtents.y);
-        if ((!groundAhead || wallAhead) && enemy.aiState != EnemyComponent.AIState.CHASE) {
+        boolean blockedAhead = !groundAhead || wallAhead;
+        boolean chasing = enemy.aiState == EnemyComponent.AIState.CHASE;
+        if (blockedAhead && !chasing) {
             enemy.facingRight = !enemy.facingRight;
         }
 
         // 2. Determine Speed based on State
         float speed = 0f;
-        if(!wallAhead) {
-            speed = (enemy.aiState == EnemyComponent.AIState.CHASE) ? chaseSpeed : moveSpeed;
+        if (!blockedAhead || (!chasing && wallAhead)) {
+            speed = chasing ? chaseSpeed : moveSpeed;
             if(enraged) {
                 speed *= 3f;
             }
@@ -69,7 +71,7 @@ public class SlimeBossBehavior implements EnemyBehavior {
         if (player != null) {
             HealthComponent playerHealth = player.getComponent(HealthComponent.class);
             // If player was just hit, pause or back off slightly so they aren't enveloped
-            if (playerHealth != null && playerHealth.hitStunTimer > 0) {
+            if (playerHealth != null && playerHealth.hitStunTimer > 0 && !blockedAhead) {
                 float awayDir = enemy.facingRight ? -1.0f : 1.0f;
                 body.setLinearVelocity(awayDir * (moveSpeed * 0.5f), body.getLinearVelocity().y);
             }
