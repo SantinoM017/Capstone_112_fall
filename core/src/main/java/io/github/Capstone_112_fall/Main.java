@@ -1,30 +1,31 @@
 package io.github.Capstone_112_fall;
 
 import com.badlogic.ashley.core.Engine;
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.SerializationException;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import io.github.Capstone_112_fall.Screens.LevelSelectScreen;
 import io.github.Capstone_112_fall.Screens.MainScreen;
+import io.github.Capstone_112_fall.Screens.DeathDialog;
 import io.github.Capstone_112_fall.Screens.VictoryDialog;
 import io.github.Capstone_112_fall.systems.*;
 import io.github.Capstone_112_fall.utils.AnimationFactory;
 import io.github.Capstone_112_fall.utils.EntityManager;
 import io.github.Capstone_112_fall.utils.MapBuilder;
+import io.github.Capstone_112_fall.utils.MapEntityData;
+import io.github.Capstone_112_fall.utils.SoundManager;
 
 public class Main extends ScreenAdapter {
     private final MainScreen game;
@@ -42,7 +43,10 @@ public class Main extends ScreenAdapter {
     private OrthogonalTiledMapRenderer mapRenderer; // draws the map
     private TextureAtlas atlas;
     private Stage victoryStage;
+    private Stage deathStage;
     private boolean continueAfterVictory;
+    private boolean retryAfterDeath;
+    private boolean leaveAfterDeath;
 
     // viewport size
     private static final float V_WIDTH = 24;
@@ -75,21 +79,14 @@ public class Main extends ScreenAdapter {
         debugRenderer = new Box2DDebugRenderer();
         engine = new Engine();
 
-        // atlas setup
-        try {
-            atlas = new TextureAtlas("game_assets.atlas");
-        } catch (GdxRuntimeException e){
-            System.out.println("Texture atlas not found");
-        }
+        atlas = game.getAssets().getGameAtlas();
+        SoundManager soundManager = game.getAssets().getSoundManager();
+        ShaderProgram hitFlashShader = game.getAssets().getHitFlashShader();
 
         AnimationFactory animationFactory = new AnimationFactory(atlas);
         EntityManager entityManager = new EntityManager(engine, animationFactory, world, atlas);
 
-        try {
-            map = new TmxMapLoader().load(levelPath); // reads from level file
-        } catch(SerializationException e){
-            System.out.println("Level not found");
-        }
+        map = game.getAssets().getMap(levelPath);
         mapRenderer = new OrthogonalTiledMapRenderer(map, 1/PPM); // draws the map converting from pixels to meters
 
         int mapWidthTiles = map.getProperties().get("width", Integer.class);
@@ -106,13 +103,13 @@ public class Main extends ScreenAdapter {
 
         // 2. COMBAT & BEHAVIOR LOGIC PHASE
         // Modify movement intentions, apply state changes, and manage player extensions
-        engine.addSystem(new PlayerStateSystem());
+        engine.addSystem(new PlayerStateSystem(soundManager));
         engine.addSystem(new EnemyAISystem(world));
         engine.addSystem(new EnemyStateSystem());
         engine.addSystem(new KnockbackSystem());
-        engine.addSystem(new DamageSystem());
+        engine.addSystem(new DamageSystem(soundManager));
         engine.addSystem(new StunSystem());
-        engine.addSystem(new PlayerExtensionSystem(entityManager));
+        engine.addSystem(new PlayerExtensionSystem(entityManager, soundManager));
         engine.addSystem(new DodgingSystem(world, camera, atlas));
         engine.addSystem(new HealthSystem());
         engine.addSystem(new PlayerBarrierSystem());
@@ -120,30 +117,48 @@ public class Main extends ScreenAdapter {
 
         // 3. PHYSICS & CONTACT PHASE
         // PhysicsContactSystem steps Box2D and processes collisions
-        engine.addSystem(new PhysicsContactSystem(world));
+        engine.addSystem(new PhysicsContactSystem(world, soundManager));
 
         // 4. POST-PHYSICS & CLEANUP PHASE
         // Sync visual transforms to Box2D bodies, process transitions, and destroy dead entities
         engine.addSystem(new PhysicsSyncSystem());
-        engine.addSystem(new DeathSystem(game, world, levelPath));
+        engine.addSystem(new CheckpointSystem());
+        engine.addSystem(new PlayerDeathSystem(world));
+        engine.addSystem(new RespawnSystem(entityManager, this));
         engine.addSystem(new CompleteLevelSystem(this, levelNumber));
         engine.addSystem(new DestroyEntitySystem(world)); // MUST run after PhysicsContactSystem and HealthSystem
 
         // 5. CAMERA & RENDERING PHASE
         engine.addSystem(cameraSystem);
-        renderSystem = new RenderSystem(batch, camera, atlas);
+        renderSystem = new RenderSystem(batch, camera, atlas, hitFlashShader);
         engine.addSystem(renderSystem);
 
         // Modified by Claude (Anthropic AI assistant)
         entityManager.createMapEntities(MapBuilder.parse(map, PPM)); // turns tiles and objects into entities
 
+        Array<MapEntityData> data = new Array<>();
+        entityManager.createMapEntities(data);
         cameraSystem.setMapBounds(mapWidth, mapHeight);
     }
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(1f, 1f, 0.7f, 1f); // refresh the screen
-        if (victoryStage == null) {
+        ScreenUtils.clear(0f, 0f, 0f, 1f);
+        float backgroundWidth = camera.viewportWidth;
+        float backgroundHeight = camera.viewportHeight;
+        batch.setProjectionMatrix(camera.combined);
+        batch.setColor(1f, 1f, 1f, 1f);
+        batch.begin();
+        batch.draw(
+            game.getAssets().getLevelBackground(),
+            camera.position.x - backgroundWidth / 2f,
+            camera.position.y - backgroundHeight / 2f,
+            backgroundWidth,
+            backgroundHeight
+        );
+        batch.end();
+
+        if (victoryStage == null && deathStage == null) {
             world.step(1/60f, 6, 2); // advance the physics simulation
             engine.update(delta); // runs the engine
         } else {
@@ -160,6 +175,16 @@ public class Main extends ScreenAdapter {
                 game.setScreen(new LevelSelectScreen(game));
             }
         }
+
+        if (deathStage != null) {
+            deathStage.act(delta);
+            deathStage.draw();
+            if (leaveAfterDeath) {
+                game.setScreen(new LevelSelectScreen(game));
+            } else if (retryAfterDeath) {
+                disposeDeathUi();
+            }
+        }
     }
 
     public void showVictoryDialog(int completedLevel) {
@@ -168,7 +193,33 @@ public class Main extends ScreenAdapter {
         victoryStage = new Stage(new FitViewport(400, 240));
         victoryStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         Gdx.input.setInputProcessor(victoryStage);
-        VictoryDialog.show(victoryStage, game.getSkin(), completedLevel, () -> continueAfterVictory = true);
+        VictoryDialog.show(victoryStage, game.getSkin(), completedLevel,
+            game.getAssets().getSoundManager(), () -> continueAfterVictory = true);
+    }
+
+    public void showDeathDialog() {
+        if (deathStage != null || victoryStage != null) return;
+
+        deathStage = new Stage(new FitViewport(400, 240));
+        deathStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        Gdx.input.setInputProcessor(deathStage);
+        DeathDialog.show(
+            deathStage,
+            game.getSkin(),
+            game.getAssets().getSoundManager(),
+            () -> retryAfterDeath = true,
+            () -> leaveAfterDeath = true
+        );
+    }
+
+    public boolean isDeathDialogVisible() {
+        return deathStage != null;
+    }
+
+    public boolean consumeDeathRetry() {
+        boolean retryRequested = retryAfterDeath;
+        retryAfterDeath = false;
+        return retryRequested;
     }
 
     @Override
@@ -183,9 +234,7 @@ public class Main extends ScreenAdapter {
         batch.dispose();
         world.dispose();
         debugRenderer.dispose();
-        map.dispose();
         mapRenderer.dispose();
-        atlas.dispose();
     }
 
     // runs when window is resized
@@ -194,6 +243,9 @@ public class Main extends ScreenAdapter {
         viewport.update(width, height);
         if (victoryStage != null) {
             victoryStage.getViewport().update(width, height, true);
+        }
+        if (deathStage != null) {
+            deathStage.getViewport().update(width, height, true);
         }
     }
 
@@ -204,6 +256,16 @@ public class Main extends ScreenAdapter {
             }
             victoryStage.dispose();
             victoryStage = null;
+        }
+    }
+
+    private void disposeDeathUi() {
+        if (deathStage != null) {
+            if (Gdx.input.getInputProcessor() == deathStage) {
+                Gdx.input.setInputProcessor(null);
+            }
+            deathStage.dispose();
+            deathStage = null;
         }
     }
 

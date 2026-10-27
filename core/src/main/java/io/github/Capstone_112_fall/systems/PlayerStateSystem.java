@@ -7,13 +7,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import io.github.Capstone_112_fall.components.*;
+import io.github.Capstone_112_fall.utils.GameAssets;
+import io.github.Capstone_112_fall.utils.SoundManager;
 
 // updates player state based on velocity and grounded status
 public class PlayerStateSystem extends IteratingSystem {
     private float keyTimer = 0f;
-    public PlayerStateSystem() {
+    private final SoundManager soundManager;
+
+    public PlayerStateSystem(SoundManager soundManager) {
         super(Family.all(StateComponent.class, PlayerComponent.class,
             GroundedComponent.class, TextureComponent.class).get());
+        this.soundManager = soundManager;
     }
 
     @Override
@@ -67,6 +72,7 @@ public class PlayerStateSystem extends IteratingSystem {
             if(state.currentState != StateComponent.State.DODGING) {
                 state.setState(StateComponent.State.DODGING);
                 state.stateTime = 0f;
+                soundManager.playRandomizedSound(GameAssets.SFX_DODGE, 0.9f, 1.1f);
             }
         }
 

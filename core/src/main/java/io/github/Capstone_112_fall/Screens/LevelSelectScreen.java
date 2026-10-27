@@ -12,12 +12,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import io.github.Capstone_112_fall.Main;
+import io.github.Capstone_112_fall.utils.GameAssets;
 import io.github.Capstone_112_fall.utils.SaveManager;
+import io.github.Capstone_112_fall.utils.ButtonSound;
 
 public class LevelSelectScreen extends ScreenAdapter {
     private static final String[] LEVEL_PATHS = {
-        "levels/level1.tmx",
-        "levels/level2.tmx"
+        GameAssets.LEVEL_1_MAP,
+        GameAssets.LEVEL_2_MAP
     };
 
     private final MainScreen game;
@@ -40,7 +42,7 @@ public class LevelSelectScreen extends ScreenAdapter {
 
         Table panel = new Table();
         panel.pad(16);
-        panel.setBackground(skin.newDrawable("round-white", new Color(1f, 0.84f, 0.89f, 1f)));
+        panel.setBackground(skin.newDrawable("round-white", new Color(1f, 0.84f, 0.89f, 0.72f)));
         rootTable.add(panel);
 
         Label.LabelStyle titleStyle = new Label.LabelStyle(skin.getFont("monogram"), new Color(0.35f, 0.16f, 0.24f, 1f));
@@ -60,12 +62,13 @@ public class LevelSelectScreen extends ScreenAdapter {
             boolean isUnlocked = i <= unlockedLevels;
             TextButton levelButton = new TextButton(
                 isUnlocked ? String.valueOf(i) : "",
-                createButtonStyle(skin)
+                createButtonStyle(skin, "default")
             );
             levelButton.getLabel().setFontScale(0.75f);
             levelButton.getLabel().invalidate();
 
             if (isUnlocked) {
+                ButtonSound.attach(levelButton, game.getAssets().getSoundManager());
                 final String levelPath = LEVEL_PATHS[i - 1];
                 levelButton.addListener(new ClickListener() {
                     @Override
@@ -85,7 +88,8 @@ public class LevelSelectScreen extends ScreenAdapter {
 
         panel.add(gridTable).row();
 
-        TextButton backButton = new TextButton("BACK", createButtonStyle(skin));
+        TextButton backButton = new TextButton("BACK", createButtonStyle(skin, "long"));
+        ButtonSound.attach(backButton, game.getAssets().getSoundManager());
         backButton.getLabel().setFontScale(0.75f);
         backButton.getLabel().invalidate();
         backButton.addListener(new ClickListener() {
@@ -99,10 +103,20 @@ public class LevelSelectScreen extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(1f, 1f, 1f, 1f);
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT);
+        drawBackground();
         stage.act(delta);
         stage.draw();
+    }
+
+    private void drawBackground() {
+        com.badlogic.gdx.graphics.g2d.Batch batch = stage.getBatch();
+        batch.setProjectionMatrix(stage.getCamera().combined);
+        batch.setColor(Color.WHITE);
+        batch.begin();
+        batch.draw(game.getAssets().getMenuBackground(), 0f, 0f, 400f, 240f);
+        batch.end();
     }
 
     @Override
@@ -132,9 +146,9 @@ public class LevelSelectScreen extends ScreenAdapter {
         }
     }
 
-    private static TextButton.TextButtonStyle createButtonStyle(Skin skin) {
+    private static TextButton.TextButtonStyle createButtonStyle(Skin skin, String styleName) {
         TextButton.TextButtonStyle style = new TextButton.TextButtonStyle(
-            skin.get("default", TextButton.TextButtonStyle.class)
+            skin.get(styleName, TextButton.TextButtonStyle.class)
         );
         if (style.fontColor != null) style.fontColor = new Color(style.fontColor);
         if (style.downFontColor != null) style.downFontColor = new Color(style.downFontColor);

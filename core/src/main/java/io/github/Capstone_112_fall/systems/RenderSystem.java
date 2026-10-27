@@ -2,7 +2,6 @@ package io.github.Capstone_112_fall.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -20,38 +19,50 @@ public class RenderSystem extends EntitySystem {
     private final ShaderProgram hitShader;
 
     private ImmutableArray<Entity> renderQueue;
+    private final Array<Entity> sortedEntities = new Array<>();
     private final TextureAtlas atlas;
+    private boolean renderQueueDirty = true;
 
-    public RenderSystem(SpriteBatch batch, OrthographicCamera camera, TextureAtlas atlas) {
+    public RenderSystem(SpriteBatch batch, OrthographicCamera camera, TextureAtlas atlas, ShaderProgram hitShader) {
         this.batch = batch;
         this.camera = camera;
         this.atlas = atlas;
-        hitShader = new ShaderProgram(
-            Gdx.files.internal("shaders/default.vert"),
-            Gdx.files.internal("shaders/hit_flash.frag")
-        );
+        this.hitShader = hitShader;
     }
 
     @Override
     public void addedToEngine(Engine engine) {
-        renderQueue = engine.getEntitiesFor(
-            Family.all(TextureComponent.class, TransformComponent.class).get()
-        );
+        Family renderFamily = Family.all(TextureComponent.class, TransformComponent.class).get();
+        renderQueue = engine.getEntitiesFor(renderFamily);
+        engine.addEntityListener(renderFamily, new EntityListener() {
+            @Override
+            public void entityAdded(Entity entity) {
+                renderQueueDirty = true;
+            }
+
+            @Override
+            public void entityRemoved(Entity entity) {
+                renderQueueDirty = true;
+            }
+        });
     }
 
     @Override
     public void update(float deltaTime) {
+        if (renderQueueDirty) {
+            sortedEntities.clear();
+            for (Entity entity : renderQueue) {
+                sortedEntities.add(entity);
+            }
+            sortedEntities.sort((first, second) -> Integer.compare(
+                ComponentMappers.TEXTURE.get(first).zIndex,
+                ComponentMappers.TEXTURE.get(second).zIndex
+            ));
+            renderQueueDirty = false;
+        }
+
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-
-        Array<Entity> sortedEntities = new Array<>(renderQueue.size());
-        for(Entity entity : renderQueue) {
-            sortedEntities.add(entity);
-        }
-        sortedEntities.sort((first, second) -> Integer.compare(
-            ComponentMappers.TEXTURE.get(first).zIndex,
-            ComponentMappers.TEXTURE.get(second).zIndex
-        ));
 
         for(Entity entity : sortedEntities) {
             TextureComponent texture = ComponentMappers.TEXTURE.get(entity);
@@ -68,9 +79,12 @@ public class RenderSystem extends EntitySystem {
             // Render the entity
             if(texture.textureRegion == null) continue;
 
-            if(texture.sourceRegion != texture.textureRegion) {
-                texture.sourceRegion = texture.textureRegion;
+            if (texture.renderRegion == null) {
                 texture.renderRegion = new TextureRegion(texture.textureRegion);
+                texture.sourceRegion = texture.textureRegion;
+            } else if (texture.sourceRegion != texture.textureRegion) {
+                texture.sourceRegion = texture.textureRegion;
+                texture.renderRegion.setRegion(texture.textureRegion);
             }
             if(texture.renderRegion.isFlipX() != texture.flipX) {
                 texture.renderRegion.flip(true, false);

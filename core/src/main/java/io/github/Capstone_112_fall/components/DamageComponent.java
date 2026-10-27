@@ -9,10 +9,12 @@ public class DamageComponent implements Component {
     public Entity dealingDamageTo;
     public boolean applyDamage;
 
-    public void takeDamage(int damage, HealthComponent hp) {
+    public boolean takeDamage(int damage, HealthComponent hp) {
         if (hp.invulnerabilityTimer <= 0) {
             hp.hp -= damage;
             System.out.println(hp.hp);
+            return true;
         }
+        return false;
     }
 }

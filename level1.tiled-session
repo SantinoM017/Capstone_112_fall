@@ -1,10 +1,10 @@
 {
     "activeFile": "assets/levels/level1.tmx",
     "expandedProjectPaths": [
-        "assets",
-        ".idea",
         "assets/levels",
-        "."
+        ".idea",
+        ".",
+        "assets"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -82,27 +82,27 @@
         },
         "assets/levels/level1.tmx": {
             "expandedObjectLayers": [
-                3,
                 2,
+                3,
                 4
             ],
             "scale": 4,
-            "selectedLayer": 2,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 1361.125,
-                "y": 160.875
+                "x": 776.125,
+                "y": 240
             }
         },
         "assets/levels/level2.tmx": {
             "expandedObjectLayers": [
-                3,
-                2
+                2,
+                3
             ],
             "scale": 4,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 405.375,
-                "y": 320.875
+                "x": 560.125,
+                "y": 240
             }
         },
         "assets/levels/pipe.tsx": {
@@ -138,29 +138,29 @@
     "map.width": 70,
     "openFiles": [
         "assets/levels/level1.tmx",
+        "assets/levels/level2.tmx",
         "assets/levels/Building1.tsx",
         "assets/levels/Building2.tsx",
         "assets/levels/Building3.tsx",
         "assets/levels/Tree 48x64.tsx",
         "assets/levels/16x16 tiles.tsx",
-        "assets/levels/32x16 tiles.tsx",
-        "assets/levels/test.tmx"
+        "assets/levels/32x16 tiles.tsx"
     ],
     "project": "level1.tiled-project",
-    "property.type": "int",
+    "property.type": "bool",
     "recentFiles": [
-        "assets/levels/test.tmx",
         "assets/levels/32x16 tiles.tsx",
         "assets/levels/16x16 tiles.tsx",
         "assets/levels/Tree 48x64.tsx",
         "assets/levels/Building3.tsx",
         "assets/levels/Building2.tsx",
         "assets/levels/Building1.tsx",
+        "assets/levels/level2.tmx",
         "assets/levels/level1.tmx",
+        "assets/levels/test.tmx",
         "assets/levels/32x32.tsx",
         "assets/levels/16x16 Tiles.tsx",
-        "assets/levels/AssetSheet_Pink.tsx",
-        "assets/levels/blocks2.tsx"
+        "assets/levels/AssetSheet_Pink.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

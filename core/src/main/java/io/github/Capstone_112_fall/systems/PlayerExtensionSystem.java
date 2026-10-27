@@ -5,14 +5,18 @@ import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import io.github.Capstone_112_fall.components.*;
 import io.github.Capstone_112_fall.utils.EntityManager;
+import io.github.Capstone_112_fall.utils.GameAssets;
+import io.github.Capstone_112_fall.utils.SoundManager;
 
 public class PlayerExtensionSystem extends IteratingSystem {
 
     private final EntityManager entityFactory;
+    private final SoundManager soundManager;
 
-    public PlayerExtensionSystem(EntityManager entityFactory) {
+    public PlayerExtensionSystem(EntityManager entityFactory, SoundManager soundManager) {
         super(Family.all(PlayerComponent.class, StateComponent.class).get());
         this.entityFactory = entityFactory;
+        this.soundManager = soundManager;
     }
 
     @Override
@@ -28,8 +32,12 @@ public class PlayerExtensionSystem extends IteratingSystem {
             }
             if (extension == null) {
                 entityFactory.createPlayerExtension(entity, PlayerExtensionComponent.Type.PARRY);
+                extension = ComponentMappers.PLAYER_EXTENSION.get(entity);
             }
             if (state.stateTime >= 0.2f) {
+                if (extension != null && !extension.successfulParry) {
+                    soundManager.playSound(GameAssets.SFX_UNSUCCESSFUL_PARRY);
+                }
                 entityFactory.destroyPlayerExtension(entity);
                 player.resetAction();
                 state.setState(StateComponent.State.IDLE);
@@ -47,6 +55,7 @@ public class PlayerExtensionSystem extends IteratingSystem {
 //            System.out.println("Creating attack hitbox for entity: " + entity);
             if(extension == null) {
                 entityFactory.createPlayerExtension(entity, PlayerExtensionComponent.Type.ATTACK);
+                soundManager.playRandomizedSound(GameAssets.SFX_SWORD_SWING, 0.95f, 1.05f);
                 return;
             }
         }

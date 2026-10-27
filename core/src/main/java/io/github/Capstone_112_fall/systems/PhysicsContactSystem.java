@@ -1,11 +1,11 @@
 package io.github.Capstone_112_fall.systems;
 
-import com.badlogic.ashley.core.ComponentMapper;
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.ashley.core.EntitySystem;
+import com.badlogic.ashley.core.*;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.Capstone_112_fall.components.*;
+import io.github.Capstone_112_fall.utils.GameAssets;
+import io.github.Capstone_112_fall.utils.SoundManager;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -14,8 +14,10 @@ import java.util.Queue;
 public class PhysicsContactSystem extends EntitySystem implements ContactListener {
 
     private final Vector2 tempVertex = new Vector2(); // Reusable vector to prevent GC allocation
+    private final SoundManager soundManager;
 
-    public PhysicsContactSystem(World world) {
+    public PhysicsContactSystem(World world, SoundManager soundManager) {
+        this.soundManager = soundManager;
         world.setContactListener(this);
     }
 
@@ -120,6 +122,17 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
                 return;
             case "objective":
                 player.completedLevel = true;
+                return;
+            case "checkpoint":
+                CheckpointComponent cp = ComponentMappers.CHECKPOINT.get(sensorEntity);
+                if (isBegin && cp != null && !cp.used) {
+                    cp.active = true;
+                    cp.used = true;
+                    HealthComponent health = ComponentMappers.HEALTH.get(playerEntity);
+                    health.hp = health.maxHp;
+                    soundManager.playSound(GameAssets.SFX_CHECKPOINT);
+                }
+                return;
         }
     }
 
@@ -165,19 +178,22 @@ public class PhysicsContactSystem extends EntitySystem implements ContactListene
 
         Entity enemy = (Entity) enemyAttackFixture.getBody().getUserData();
         Entity player = (Entity) parryFixture.getBody().getUserData();
+        PlayerExtensionComponent parryExtension = ComponentMappers.PLAYER_EXTENSION.get(player);
         HealthComponent health = ComponentMappers.HEALTH.get(enemy);
         DamageComponent damage = ComponentMappers.DAMAGE.get(enemy);
         KnockbackComponent kb = ComponentMappers.KNOCKBACK.get(player);
         StunComponent stun = ComponentMappers.STUN.get(player);
         setKnockbackState(isBegin, enemy, kb);
         if(isBegin) {
+            if (parryExtension != null) {
+                parryExtension.successfulParry = true;
+            }
+            soundManager.playSound(GameAssets.SFX_PARRY);
             damage.takeDamage(damage.damage, health);
             stun.applyStun = true;
             stun.stunnedEntity = enemy;
         }
     }
-
-
 
     private void checkOneWayPlatform(Contact contact, Fixture fixtureA, Fixture fixtureB) {
         // Match player body/foot fixtures against one-way platforms

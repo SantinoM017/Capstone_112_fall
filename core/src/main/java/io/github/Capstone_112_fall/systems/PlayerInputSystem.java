@@ -21,7 +21,6 @@ import io.github.Capstone_112_fall.components.PlayerComponent;
 public class PlayerInputSystem extends IteratingSystem {
     private static final float MAX_SLOPE_SPEED_MULTIPLIER = 1.30f;
     private static final float JUMP_VELOCITY = 4.0f; // Set explicit upward launch velocity (m/s)
-
     public PlayerInputSystem() {
         super(Family.all(Box2DComponent.class, PlayerComponent.class).get());
     }
@@ -32,6 +31,10 @@ public class PlayerInputSystem extends IteratingSystem {
         PlayerComponent player = ComponentMappers.PLAYER.get(entity);
         GroundedComponent grounded = ComponentMappers.GROUNDED.get(entity);
         HealthComponent health = ComponentMappers.HEALTH.get(entity);
+
+        if (box2D == null || box2D.body == null) {
+            return;
+        }
 
         if(health != null && health.hitStunTimer > 0) {
             return;

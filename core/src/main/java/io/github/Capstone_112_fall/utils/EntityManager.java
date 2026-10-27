@@ -84,6 +84,7 @@ public class EntityManager {
             switch (property != null ? property : "") {
                 case "spawn":
                     createPlayerEntity(d.x, d.y);
+                    createSpawnCheckpoint(d.x, d.y);
                     break;
 
                 case "entity_hurtbox":
@@ -431,7 +432,12 @@ public class EntityManager {
                 pb.entityID = data.entityID;
                 block.add(pb);
                 break;
-            case "checkpoint": fixture.setUserData("checkpoint"); break;
+            case "checkpoint": fixture.setUserData("checkpoint");
+                  CheckpointComponent cp = engine.createComponent(CheckpointComponent.class);
+                  cp.x = data.x;
+                  cp.y = data.y;
+                  block.add(cp);
+                  break;
             default: fixture.setUserData("static_block"); break;
         }
         shape.dispose();
@@ -575,6 +581,16 @@ public class EntityManager {
         StunComponent stun = engine.createComponent(StunComponent.class);
         stun.stunTime = stunTime;
         entity.add(stun);
+    }
+
+    private void createSpawnCheckpoint(float x, float y) {
+        Entity checkpoint = engine.createEntity();
+        CheckpointComponent component = engine.createComponent(CheckpointComponent.class);
+        component.x = x;
+        component.y = y;
+        component.order = 0;
+        checkpoint.add(component);
+        engine.addEntity(checkpoint);
     }
 
 }
